@@ -22,11 +22,11 @@ public class State {
 	//
 
 	public boolean[][] walls;
-	public final Map<Position, Character> boxes;
+	public final TreeMap<Position, Character> boxes;
 	public final Map<Position, Character> goals;
 
 	public final Position agentPos;
-	public final Map<Position, Character> otherAgents;
+	public final TreeMap<Position, Character> otherAgents;
 
 	public State parent;
 	public final Command action;
@@ -58,7 +58,7 @@ public class State {
 		this.walls = new boolean[this.height][this.width];
 		this.boxes = new TreeMap<>();
 		this.goals = new HashMap<>();
-		this.otherAgents = new HashMap<>();
+		this.otherAgents = new TreeMap<>();
 	}
 
 	public int g() {
