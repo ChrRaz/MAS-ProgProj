@@ -23,6 +23,13 @@ public abstract class Command {
 		}
 	}
 
+	public static class NoOp extends Command {
+		@Override
+		public String toString() {
+			return "NoOp";
+		}
+	}
+
 	public static class Move extends Command {
 		private final Dir agentDir;
 
