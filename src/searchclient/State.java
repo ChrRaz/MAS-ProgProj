@@ -104,16 +104,16 @@ public class State {
 			Position pos = box.getKey();
 			Character type = box.getValue();
 
-			hash = hash * prime + pos.getL();
-			hash = hash * prime + pos.getR();
+			hash = hash * prime + pos.getRow();
+			hash = hash * prime + pos.getCol();
 			hash = hash * prime + type;
 		}
 
 		for (Map.Entry<Position, Character> agent : this.agents.entrySet()) {
 			Position pos = agent.getKey();
 			Character type = agent.getValue();
-			hash = hash * prime + pos.getL();
-			hash = hash * prime + pos.getR();
+			hash = hash * prime + pos.getRow();
+			hash = hash * prime + pos.getCol();
 		}
 
 		return hash;

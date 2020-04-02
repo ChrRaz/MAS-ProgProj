@@ -145,7 +145,7 @@ public class State {
 	}
 
 	public boolean cellIsFree(Position pos) {
-		return !this.walls[pos.getL()][pos.getR()] && !this.boxAt(pos) && !this.agentAt(pos);
+		return !this.walls[pos.getRow()][pos.getCol()] && !this.boxAt(pos) && !this.agentAt(pos);
 	}
 
 	public boolean boxAt(Position pos) {
@@ -177,16 +177,16 @@ public class State {
 			Position pos = box.getKey();
 			Character type = box.getValue();
 
-			hash = hash * prime + pos.getL();
-			hash = hash * prime + pos.getR();
+			hash = hash * prime + pos.getRow();
+			hash = hash * prime + pos.getCol();
 			hash = hash * prime + type;
 		}
 
 		for (Map.Entry<Position, Character> agent : this.otherAgents.entrySet()) {
 			Position pos = agent.getKey();
 			Character type = agent.getValue();
-			hash = hash * prime + pos.getL();
-			hash = hash * prime + pos.getR();
+			hash = hash * prime + pos.getRow();
+			hash = hash * prime + pos.getCol();
 			hash = hash * prime + type;
 		}
 
