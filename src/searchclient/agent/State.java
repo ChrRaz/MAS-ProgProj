@@ -125,7 +125,7 @@ public class State {
 					Position newAgentPos = this.agentPos.add(agentDir);
 
 					if (this.cellIsFree(newAgentPos)) {
-						State newState = new State(this, new Command.Push(agentDir, boxDir), newAgentPos);
+						State newState = new State(this, new Command.Pull(agentDir, boxDir), newAgentPos);
 
 						Character box = newState.boxes.remove(boxPos);
 						newState.boxes.put(this.agentPos, box);
