@@ -7,8 +7,7 @@ import searchclient.agent.Strategy;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -146,26 +145,72 @@ public class Main {
 		State initialState = parseLevel(serverMessages);
 		System.err.println(initialState);
 
-		if (initialState.agents.size() != 1) {
-			System.err.println("Lol single agent only");
-			System.exit(1);
+		Communicator serverComm = new Communicator(serverMessages, System.out);
+
+		// For each goal find which agent can satisfy the goal the fastest
+
+		// Goal -> Agent -> "time"
+		Map<Position, Map<Character, List<searchclient.agent.State>>> solutions = new HashMap<>();
+
+		for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
+			Position goalPos = goal.getKey();
+			Character goalType = goal.getValue();
+
+			HashMap<Character, List<searchclient.agent.State>> currentSolutionMap = new HashMap<>();
+			solutions.put(goalPos, currentSolutionMap);
+
+			TreeMap<Position, Character> relevantBoxes = new TreeMap<>();
+			Set<Position> newWalls = new HashSet<>(initialState.walls);
+
+			for (Map.Entry<Position, Character> box : initialState.boxes.entrySet()) {
+				Position boxPos = box.getKey();
+				Character boxType = box.getValue();
+
+				if (goalType.equals(boxType)) {
+					relevantBoxes.put(boxPos, boxType);
+				} else {
+					newWalls.add(boxPos);
+				}
+			}
+
+			// Wallify all agents
+			newWalls.addAll(initialState.agents.keySet());
+
+			for (Map.Entry<Position, Character> agent : initialState.agents.entrySet()) {
+				Position agentPos = agent.getKey();
+				Character agentType = agent.getValue();
+
+				searchclient.agent.State SAState = new searchclient.agent.State(initialState.width, initialState.height, agentPos, initialState.domain);
+				SAState.walls.addAll(newWalls);
+				SAState.walls.remove(agentPos);
+				SAState.goals.put(goalPos, goalType);
+				SAState.boxes.putAll(relevantBoxes);
+				SAState.otherAgents.putAll(initialState.agents);
+				SAState.otherAgents.remove(agentPos);
+
+				ArrayList<searchclient.agent.State> solution = Agent.search(SAState, new Strategy.StrategyBestFirst(new Heuristic.AStar(SAState)));
+				// System.err.printf("Agent: %c -> %d (%s)\n", agentType, solution.size(), solution.stream().map(s -> s.action.toString()).collect(Collectors.toList()));
+
+				currentSolutionMap.put(agentType, solution);
+			}
 		}
 
-		Position agentPos = initialState.agents.keySet().iterator().next();
+		// Find fastest agent for each goal and execute sequentially
+		// Strong (and wrong) assumption that agents only win one goal!
+		for (Map.Entry<Position, Map<Character, List<searchclient.agent.State>>> entry : solutions.entrySet()) {
+			Position goalPos = entry.getKey();
+			Map<Character, List<searchclient.agent.State>> agentSolutions = entry.getValue();
+			Map.Entry<Character, List<searchclient.agent.State>> fastest = Collections.min(agentSolutions.entrySet(), Comparator.comparing(x -> x.getValue().size()));
 
-		searchclient.agent.State saState = new searchclient.agent.State(initialState.width, initialState.height, agentPos, initialState.domain);
-		saState.walls = initialState.walls;
-		saState.boxes.putAll(initialState.boxes);
-		saState.goals.putAll(initialState.goals);
+			int fastestAgent = Character.getNumericValue(fastest.getKey());
+			int numAgents = initialState.agents.size();
 
+			for (searchclient.agent.State state : fastest.getValue()) {
+				List<Command> jointAction = new ArrayList<>(Collections.nCopies(numAgents, new Command.NoOp()));
+				jointAction.set(fastestAgent, state.action);
 
-		ArrayList<searchclient.agent.State> solution = Agent.Search(saState, new Strategy.StrategyBestFirst(new Heuristic.AStar(saState)));
-		if (solution != null) {
-			for (searchclient.agent.State state : solution) {
-				System.out.println(state.action);
+				System.err.println(jointAction + " => " + serverComm.send(jointAction));
 			}
-		} else {
-			System.err.println("damn :/");
 		}
 	}
 }
