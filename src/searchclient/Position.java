@@ -29,6 +29,10 @@ public class Position implements Comparable<Position> {
 			this.r == position.r;
 	}
 
+	public Position add(Command.Dir dir) {
+		return new Position(this.l + dir.getDeltaRow(), this.r + dir.getDeltaCol());
+	}
+
 	@Override
 	public String toString() {
 		return String.format("<%s, %s>", this.l, this.r);
