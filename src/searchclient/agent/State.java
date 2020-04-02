@@ -21,7 +21,7 @@ public class State {
 	// this.walls[row][col] is true if there's a wall at (row, col)
 	//
 
-	public boolean[][] walls;
+	public final Set<Position> walls;
 	public final TreeMap<Position, Character> boxes;
 	public final Map<Position, Character> goals;
 
@@ -55,7 +55,7 @@ public class State {
 		this.g = 0;
 		this.width = width;
 		this.height = height;
-		this.walls = new boolean[this.height][this.width];
+		this.walls = new HashSet<>();
 		this.boxes = new TreeMap<>();
 		this.goals = new HashMap<>();
 		this.otherAgents = new TreeMap<>();
@@ -145,7 +145,7 @@ public class State {
 	}
 
 	public boolean cellIsFree(Position pos) {
-		return !this.walls[pos.getRow()][pos.getCol()] && !this.boxAt(pos) && !this.agentAt(pos);
+		return !this.walls.contains(pos) && !this.boxAt(pos) && !this.agentAt(pos);
 	}
 
 	public boolean boxAt(Position pos) {
@@ -212,7 +212,7 @@ public class State {
 			return false;
 		if (!this.goals.equals(other.goals))
 			return false;
-		return Arrays.deepEquals(this.walls, other.walls);
+		return this.walls.equals(other.walls);
 	}
 
 	@Override
@@ -230,7 +230,7 @@ public class State {
 					s.append(Character.toLowerCase(this.boxes.get(pos)));
 				} else if (this.goals.containsKey(pos)) {
 					s.append(this.goals.get(pos));
-				} else if (this.walls[row][col]) {
+				} else if (this.walls.contains(pos)) {
 					s.append("+");
 				} else {
 					s.append(" ");

@@ -40,7 +40,7 @@ public abstract class Heuristic implements Comparator<State> {
                 int row = p.getRow(), col = p.getCol();
 
                 if (p.within(0, 0, initialState.height - 1, initialState.width - 1) &&
-                        this.distToGoal.get(row).get(col).getOrDefault(g, Integer.MAX_VALUE) > dist && !initialState.walls[row][col]) {
+                        this.distToGoal.get(row).get(col).getOrDefault(g, Integer.MAX_VALUE) > dist && !initialState.walls.contains(p)) {
 
                     this.distToGoal.get(row).get(col).put(g, dist);
 

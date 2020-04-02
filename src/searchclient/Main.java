@@ -75,7 +75,7 @@ public class Main {
 				char chr = lines.get(row).charAt(col);
 
 				if (chr == '+') { // Wall.
-					initialState.walls[row][col] = true;
+					initialState.walls.add(new Position(row, col));
 				} else if ('0' <= chr && chr <= '9') { // Agent.
 					initialState.agents.put(new Position(row, col), chr);
 				} else if ('A' <= chr && chr <= 'Z') { // Box.
@@ -116,7 +116,7 @@ public class Main {
 				char chr = lines.get(row).charAt(col);
 
 				if (chr == '+') { // Wall.
-					assert initialState.walls[row][col];
+
 				} else if (('0' <= chr && chr <= '9') || ('A' <= chr && chr <= 'Z')) { // Goal / agent
 					initialState.goals.put(new Position(row, col), chr);
 				} else if (chr == ' ') {
