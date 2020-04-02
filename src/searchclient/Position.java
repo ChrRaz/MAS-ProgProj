@@ -33,6 +33,10 @@ public class Position implements Comparable<Position> {
 		return new Position(this.row + dir.getDeltaRow(), this.col + dir.getDeltaCol());
 	}
 
+	public boolean within(int minRow, int minCol, int maxRow, int maxCol) {
+		return this.getRow() >= minRow && this.getRow() <= maxRow && this.getCol() >= minCol && this.getCol() <= maxCol;
+	}
+
 	@Override
 	public String toString() {
 		return String.format("<%s, %s>", this.row, this.col);
