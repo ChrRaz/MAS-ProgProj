@@ -1,5 +1,9 @@
 package searchclient;
 
+import searchclient.agent.Agent;
+import searchclient.agent.Heuristic;
+import searchclient.agent.Strategy;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -138,8 +142,30 @@ public class Main {
 		// Identify ourselves
 		System.out.println("Meme-o-tron 2000");
 
-		// Test that we can parse the level
-		System.err.println(parseLevel(serverMessages));
+		// Test that we can solve a singe-agent level
+		State initialState = parseLevel(serverMessages);
+		System.err.println(initialState);
 
+		if (initialState.agents.size() != 1) {
+			System.err.println("Lol single agent only");
+			System.exit(1);
+		}
+
+		Position agentPos = initialState.agents.keySet().iterator().next();
+
+		searchclient.agent.State saState = new searchclient.agent.State(initialState.width, initialState.height, agentPos, initialState.domain);
+		saState.walls = initialState.walls;
+		saState.boxes.putAll(initialState.boxes);
+		saState.goals.putAll(initialState.goals);
+
+
+		ArrayList<searchclient.agent.State> solution = Agent.Search(saState, new Strategy.StrategyBestFirst(new Heuristic.AStar(saState)));
+		if (solution != null) {
+			for (searchclient.agent.State state : solution) {
+				System.out.println(state.action);
+			}
+		} else {
+			System.err.println("damn :/");
+		}
 	}
 }

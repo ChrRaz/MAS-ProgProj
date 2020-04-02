@@ -185,6 +185,7 @@ public class State {
 		for (Map.Entry<Position, Character> agent : this.otherAgents.entrySet()) {
 			Position pos = agent.getKey();
 			Character type = agent.getValue();
+
 			hash = hash * prime + pos.getRow();
 			hash = hash * prime + pos.getCol();
 			hash = hash * prime + type;
