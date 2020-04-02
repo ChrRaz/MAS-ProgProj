@@ -40,7 +40,7 @@ public class State {
 		this.boxes = new TreeMap<>(parent.boxes);
 		this.goals = parent.goals;
 		this.agents = new HashMap<>(parent.agents);
-		color = parent.color;
+		this.color = parent.color;
 	}
 
 	public State(int width, int height, String domain) {
@@ -53,7 +53,7 @@ public class State {
 		this.boxes = new TreeMap<>();
 		this.goals = new HashMap<>();
 		this.agents = new HashMap<>();
-		color = new HashMap<>();
+		this.color = new HashMap<>();
 	}
 
 	public int g() {

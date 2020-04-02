@@ -2,10 +2,10 @@ package searchclient;
 
 public abstract class Command {
 	public enum Dir {
-		N(-1,0),
-		W(0,-1),
-		E(0,1),
-		S(1,0);
+		N(-1, 0),
+		W(0, -1),
+		E(0, 1),
+		S(1, 0);
 
 		private final int deltaRow, deltaCol;
 
@@ -15,11 +15,11 @@ public abstract class Command {
 		}
 
 		public int getDeltaRow() {
-			return deltaRow;
+			return this.deltaRow;
 		}
 
 		public int getDeltaCol() {
-			return deltaCol;
+			return this.deltaCol;
 		}
 	}
 
@@ -31,7 +31,7 @@ public abstract class Command {
 		}
 
 		public Dir getAgentDir() {
-			return agentDir;
+			return this.agentDir;
 		}
 
 		@Override
@@ -50,11 +50,11 @@ public abstract class Command {
 		}
 
 		public Dir getAgentDir() {
-			return agentDir;
+			return this.agentDir;
 		}
 
 		public Dir getBoxDir() {
-			return boxDir;
+			return this.boxDir;
 		}
 
 		@Override
@@ -73,11 +73,11 @@ public abstract class Command {
 		}
 
 		public Dir getAgentDir() {
-			return agentDir;
+			return this.agentDir;
 		}
 
 		public Dir getBoxDir() {
-			return boxDir;
+			return this.boxDir;
 		}
 
 		@Override
