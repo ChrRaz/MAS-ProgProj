@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class Agent {
 
-	public static ArrayList<State> search(State initialState, Strategy strategy) {
+	public static ArrayList<SAState> search(SAState initialState, Strategy strategy) {
 		System.err.format("Search starting with strategy %s.\n", strategy.toString());
 		strategy.addToFrontier(initialState);
 
@@ -20,7 +20,7 @@ public class Agent {
 				return null;
 			}
 
-			State leafState = strategy.getAndRemoveLeaf();
+			SAState leafState = strategy.getAndRemoveLeaf();
 
 			if (iterations % 1000 == 0)
 				System.err.println(String.join("\t",
@@ -38,7 +38,7 @@ public class Agent {
 			}
 
 			strategy.addToExplored(leafState);
-			for (State n : leafState.getExpandedStates()) { // The list of expanded states is shuffled randomly; see State.java.
+			for (SAState n : leafState.getExpandedStates()) { // The list of expanded states is shuffled randomly; see State.java.
 				if (!strategy.isExplored(n) && !strategy.inFrontier(n)) {
 					strategy.addToFrontier(n);
 				}

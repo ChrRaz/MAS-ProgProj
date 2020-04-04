@@ -2,7 +2,7 @@ package searchclient;
 
 import java.util.*;
 
-public class State {
+public class MAState {
 	private static final Random RNG = new Random(1);
 
 	public int height, width;
@@ -25,12 +25,12 @@ public class State {
 	public final Map<Position, Character> agents;
 	public final Map<Character, String> color;
 
-	public State parent;
+	public MAState parent;
 	public Command action;
 
 	private int g;
 
-	public State(State parent) {
+	public MAState(MAState parent) {
 		this.domain = parent.domain;
 		this.parent = parent;
 		this.g = parent.g() + 1;
@@ -43,7 +43,7 @@ public class State {
 		this.color = parent.color;
 	}
 
-	public State(int width, int height, String domain) {
+	public MAState(int width, int height, String domain) {
 		this.domain = domain;
 		this.parent = null;
 		this.g = 0;
@@ -87,9 +87,9 @@ public class State {
 		return this.agents.containsKey(pos);
 	}
 
-	public ArrayList<State> extractPlan() {
-		ArrayList<State> plan = new ArrayList<>();
-		State n = this;
+	public ArrayList<MAState> extractPlan() {
+		ArrayList<MAState> plan = new ArrayList<>();
+		MAState n = this;
 		while (!n.isInitialState()) {
 			plan.add(n);
 			n = n.parent;
@@ -131,7 +131,7 @@ public class State {
 			return false;
 		if (this.getClass() != obj.getClass())
 			return false;
-		State other = (State) obj;
+		MAState other = (MAState) obj;
 		if (!this.agents.equals(other.agents))
 			return false;
 		if (!this.boxes.equals(other.boxes))

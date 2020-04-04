@@ -5,7 +5,7 @@ import searchclient.Position;
 
 import java.util.*;
 
-public class State {
+public class SAState {
 	private static final Random RNG = new Random(1);
 
 	public int height, width;
@@ -28,12 +28,12 @@ public class State {
 	public final Position agentPos;
 	public final TreeMap<Position, Character> otherAgents;
 
-	public State parent;
+	public SAState parent;
 	public final Command action;
 
 	private int g;
 
-	public State(State parent, Command action, Position agentPos) {
+	public SAState(SAState parent, Command action, Position agentPos) {
 		this.action = action;
 		this.agentPos = agentPos;
 		this.domain = parent.domain;
@@ -47,7 +47,7 @@ public class State {
 		this.otherAgents = parent.otherAgents;
 	}
 
-	public State(int width, int height, Position agentPos, String domain) {
+	public SAState(int width, int height, Position agentPos, String domain) {
 		this.agentPos = agentPos;
 		this.domain = domain;
 		this.parent = null;
@@ -80,15 +80,15 @@ public class State {
 		return true;
 	}
 
-	public ArrayList<State> getExpandedStates() {
-		ArrayList<State> expandedStates = new ArrayList<>();
+	public ArrayList<SAState> getExpandedStates() {
+		ArrayList<SAState> expandedStates = new ArrayList<>();
 
 		// Move
 		for (Command.Dir agentDir : Command.Dir.values()) {
 			Position newAgentPos = this.agentPos.add(agentDir);
 
 			if (this.cellIsFree(newAgentPos))
-				expandedStates.add(new State(this, new Command.Move(agentDir), newAgentPos));
+				expandedStates.add(new SAState(this, new Command.Move(agentDir), newAgentPos));
 		}
 
 		// Push
@@ -104,7 +104,7 @@ public class State {
 
 					// Check if there's something on the cell to which the agent is moving
 					if (this.cellIsFree(newBoxPos)) {
-						State newState = new State(this, new Command.Push(agentDir, boxDir), newAgentPos);
+						SAState newState = new SAState(this, new Command.Push(agentDir, boxDir), newAgentPos);
 
 						Character box = newState.boxes.remove(boxPos);
 						newState.boxes.put(newBoxPos, box);
@@ -125,7 +125,7 @@ public class State {
 					Position newAgentPos = this.agentPos.add(agentDir);
 
 					if (this.cellIsFree(newAgentPos)) {
-						State newState = new State(this, new Command.Pull(agentDir, boxDir), newAgentPos);
+						SAState newState = new SAState(this, new Command.Pull(agentDir, boxDir), newAgentPos);
 
 						Character box = newState.boxes.remove(boxPos);
 						newState.boxes.put(this.agentPos, box);
@@ -137,7 +137,7 @@ public class State {
 		}
 
 		// NoOp
-		expandedStates.add(new State(this, new Command.NoOp(), this.agentPos));
+		expandedStates.add(new SAState(this, new Command.NoOp(), this.agentPos));
 		// Kommer sikkert til at fucke massivt med DFS og Greedy lol
 
 		Collections.shuffle(expandedStates, RNG);
@@ -156,9 +156,9 @@ public class State {
 		return this.agentPos.equals(pos) || this.otherAgents.containsKey(pos);
 	}
 
-	public ArrayList<State> extractPlan() {
-		ArrayList<State> plan = new ArrayList<>();
-		State n = this;
+	public ArrayList<SAState> extractPlan() {
+		ArrayList<SAState> plan = new ArrayList<>();
+		SAState n = this;
 		while (!n.isInitialState()) {
 			plan.add(n);
 			n = n.parent;
@@ -203,7 +203,7 @@ public class State {
 		if (this.getClass() != obj.getClass())
 			return false;
 
-		State other = (State) obj;
+		SAState other = (SAState) obj;
 		if (!this.agentPos.equals(other.agentPos))
 			return false;
 		if (!this.otherAgents.equals(other.otherAgents))

@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.PriorityQueue;
 
 public abstract class Strategy {
-    private HashSet<State> explored;
+    private HashSet<SAState> explored;
     private final long startTime;
 
     public Strategy() {
@@ -13,11 +13,11 @@ public abstract class Strategy {
         this.startTime = System.currentTimeMillis();
     }
 
-    public void addToExplored(State n) {
+    public void addToExplored(SAState n) {
         this.explored.add(n);
     }
 
-    public boolean isExplored(State n) {
+    public boolean isExplored(SAState n) {
         return this.explored.contains(n);
     }
 
@@ -39,24 +39,24 @@ public abstract class Strategy {
         return (System.currentTimeMillis() - this.startTime) / 1000f;
     }
 
-    public abstract State getAndRemoveLeaf();
+    public abstract SAState getAndRemoveLeaf();
 
-    public abstract void addToFrontier(State n);
+    public abstract void addToFrontier(SAState n);
 
-    public abstract boolean inFrontier(State n);
+    public abstract boolean inFrontier(SAState n);
 
     public abstract int countFrontier();
 
     public abstract boolean frontierIsEmpty();
 
-    public abstract String describeState(State n);
+    public abstract String describeState(SAState n);
 
     @Override
     public abstract String toString();
 
     public static class StrategyBFS extends Strategy {
-        private ArrayDeque<State> frontier;
-        private HashSet<State> frontierSet;
+        private ArrayDeque<SAState> frontier;
+        private HashSet<SAState> frontierSet;
 
         public StrategyBFS() {
             super();
@@ -65,14 +65,14 @@ public abstract class Strategy {
         }
 
         @Override
-        public State getAndRemoveLeaf() {
-            State n = this.frontier.pollFirst();
+        public SAState getAndRemoveLeaf() {
+            SAState n = this.frontier.pollFirst();
             this.frontierSet.remove(n);
             return n;
         }
 
         @Override
-        public void addToFrontier(State n) {
+        public void addToFrontier(SAState n) {
             this.frontier.addLast(n);
             this.frontierSet.add(n);
         }
@@ -88,12 +88,12 @@ public abstract class Strategy {
         }
 
         @Override
-        public boolean inFrontier(State n) {
+        public boolean inFrontier(SAState n) {
             return this.frontierSet.contains(n);
         }
 
         @Override
-        public String describeState(State n) {
+        public String describeState(SAState n) {
             return String.format("[g: %d]", n.g());
         }
 
@@ -104,8 +104,8 @@ public abstract class Strategy {
     }
 
     public static class StrategyDFS extends Strategy {
-        private ArrayDeque<State> frontier;
-        private HashSet<State> frontierSet;
+        private ArrayDeque<SAState> frontier;
+        private HashSet<SAState> frontierSet;
 
         public StrategyDFS() {
             super();
@@ -114,14 +114,14 @@ public abstract class Strategy {
         }
 
         @Override
-        public State getAndRemoveLeaf() {
-            State n = this.frontier.pollLast();
+        public SAState getAndRemoveLeaf() {
+            SAState n = this.frontier.pollLast();
             this.frontierSet.remove(n);
             return n;
         }
 
         @Override
-        public void addToFrontier(State n) {
+        public void addToFrontier(SAState n) {
             this.frontier.addLast(n);
             this.frontierSet.add(n);
         }
@@ -137,12 +137,12 @@ public abstract class Strategy {
         }
 
         @Override
-        public boolean inFrontier(State n) {
+        public boolean inFrontier(SAState n) {
             return this.frontierSet.contains(n);
         }
 
         @Override
-        public String describeState(State n) {
+        public String describeState(SAState n) {
             return String.format("[g: %d]", n.g());
         }
 
@@ -153,8 +153,8 @@ public abstract class Strategy {
     }
 
     public static class StrategyBestFirst extends Strategy {
-        private PriorityQueue<State> frontier;
-        private HashSet<State> frontierSet;
+        private PriorityQueue<SAState> frontier;
+        private HashSet<SAState> frontierSet;
         private Heuristic heuristic;
 
         public StrategyBestFirst(Heuristic h) {
@@ -165,14 +165,14 @@ public abstract class Strategy {
         }
 
         @Override
-        public State getAndRemoveLeaf() {
-            State n = this.frontier.poll();
+        public SAState getAndRemoveLeaf() {
+            SAState n = this.frontier.poll();
             this.frontierSet.remove(n);
             return n;
         }
 
         @Override
-        public void addToFrontier(State n) {
+        public void addToFrontier(SAState n) {
             this.frontier.add(n);
             this.frontierSet.add(n);
         }
@@ -188,12 +188,12 @@ public abstract class Strategy {
         }
 
         @Override
-        public boolean inFrontier(State n) {
+        public boolean inFrontier(SAState n) {
             return this.frontierSet.contains(n);
         }
 
         @Override
-        public String describeState(State n) {
+        public String describeState(SAState n) {
             return String.format("[f: %d, g: %d, h: %d]", this.heuristic.f(n), n.g(), this.heuristic.h(n));
         }
 
