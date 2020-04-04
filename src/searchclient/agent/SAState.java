@@ -1,6 +1,7 @@
 package searchclient.agent;
 
 import searchclient.Command;
+import searchclient.MAState;
 import searchclient.Position;
 
 import java.util.*;
@@ -80,7 +81,7 @@ public class SAState {
 		return true;
 	}
 
-	public ArrayList<SAState> getExpandedStates() {
+	public ArrayList<SAState> getExpandedStates(MAState alreadyPlanned) {
 		ArrayList<SAState> expandedStates = new ArrayList<>();
 
 		// Move

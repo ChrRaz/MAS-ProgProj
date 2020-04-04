@@ -133,6 +133,8 @@ public class Main {
 
 		assert "#end".equals(line);
 
+		// TODO: Convert boxes with no agents to walls
+
 		return initialState;
 	}
 
@@ -148,7 +150,17 @@ public class Main {
 
 		Communicator serverComm = new Communicator(serverMessages, System.out);
 
-		// For each goal find which agent can satisfy the goal the fastest
+		// Construct initial MA state with only the walls of initial state.
+		// while !isGoalState
+		//   Choose single agent-goal pair such that agent fills goal fastest
+		//     - Filter out the part of alreadyplanned that happens before the agent can move
+		//     - Construct SA initial state with only relevant items
+		//     - Later: Solve assignment of all agents to goals
+		//   Update MA state
+		//     Copy box and agent
+		//
+
+
 
 		// Goal -> Agent -> "time"
 		Map<Position, Map<Character, List<SAState>>> solutions = new HashMap<>();
@@ -192,7 +204,7 @@ public class Main {
 				saState.otherAgents.putAll(initialState.agents);
 				saState.otherAgents.remove(agentPos);
 
-				ArrayList<SAState> solution = Agent.search(saState, new Strategy.StrategyBestFirst(new Heuristic.AStar(saState)));
+				ArrayList<SAState> solution = Agent.search(saState, null, new Strategy.StrategyBestFirst(new Heuristic.AStar(saState)));
 				// System.err.printf("Agent: %c -> %d (%s)\n", agentType, solution.size(), solution.stream().map(s -> s.action.toString()).collect(Collectors.toList()));
 
 				currentSolutionMap.put(agentType, solution);

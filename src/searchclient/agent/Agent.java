@@ -1,12 +1,14 @@
 package searchclient.agent;
 
+import searchclient.MAState;
 import searchclient.util.Memory;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Agent {
 
-	public static ArrayList<SAState> search(SAState initialState, Strategy strategy) {
+	public static ArrayList<SAState> search(SAState initialState, List<MAState> alreadyPlanned, Strategy strategy) {
 		System.err.format("Search starting with strategy %s.\n", strategy.toString());
 		strategy.addToFrontier(initialState);
 
@@ -37,8 +39,11 @@ public class Agent {
 				return leafState.extractPlan();
 			}
 
+			// Pick out state based on leafState.g() and alreadyPlanned list.
+			// If index out of bounds just get last state as nothing will change yet.
+
 			strategy.addToExplored(leafState);
-			for (SAState n : leafState.getExpandedStates()) { // The list of expanded states is shuffled randomly; see State.java.
+			for (SAState n : leafState.getExpandedStates(null)) { // The list of expanded states is shuffled randomly; see State.java.
 				if (!strategy.isExplored(n) && !strategy.inFrontier(n)) {
 					strategy.addToFrontier(n);
 				}
