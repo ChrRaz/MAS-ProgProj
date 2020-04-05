@@ -41,9 +41,15 @@ public class Agent {
 
 			// Pick out state based on leafState.g() and alreadyPlanned list.
 			// If index out of bounds just get last state as nothing will change yet.
+			MAState maState = null;
+			if (leafState.g()>=alreadyPlanned.size()){
+				maState = alreadyPlanned.get(alreadyPlanned.size()-1);
+			} else {
+				maState = alreadyPlanned.get(leafState.g());
+			} 
 
 			strategy.addToExplored(leafState);
-			for (SAState n : leafState.getExpandedStates(null)) { // The list of expanded states is shuffled randomly; see State.java.
+			for (SAState n : leafState.getExpandedStates(maState)) { // The list of expanded states is shuffled randomly; see State.java.
 				if (!strategy.isExplored(n) && !strategy.inFrontier(n)) {
 					strategy.addToFrontier(n);
 				}
