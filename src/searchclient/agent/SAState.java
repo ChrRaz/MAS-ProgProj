@@ -125,7 +125,7 @@ public class SAState {
 				for (Command.Dir agentDir : Command.Dir.values()) {
 					Position newAgentPos = this.agentPos.add(agentDir);
 
-					if (this.cellIsFree(newAgentPos)&& alreadyPlanned.cellIsFree(newAgentPos)) {
+					if (this.cellIsFree(newAgentPos) && alreadyPlanned.cellIsFree(newAgentPos)) {
 						SAState newState = new SAState(this, new Command.Pull(agentDir, boxDir), newAgentPos);
 
 						Character box = newState.boxes.remove(boxPos);
