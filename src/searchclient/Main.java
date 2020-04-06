@@ -138,6 +138,29 @@ public class Main {
 		return initialState;
 	}
 
+
+	// clean alreadyplaned for a SAState with a goal and there for a boxType
+	public static List<MAState> cleanMAStateList(List<MAState> alreadyPlanned, char agentType, char goalType){
+		//Removes agentType and boxes that match with goalType from every state in alreadyPlanned
+		// We will later fix for multiple goals of same type
+		return alreadyPlanned;
+	}
+
+	public static List<MAState> applySolution(List<MAState> alreadyPlanned, HashMap.Entry<Character, List<SAState>> solution) {
+
+		// Get agentType
+		Character agentType = solution.getKey();
+
+		// Get agentPos
+
+		// Apply solution to alreadyPlanned and if needed extend the list
+
+
+		List<MAState> newAlreadyPlanned = new ArrayList<MAState>();
+
+		return alreadyPlanned;
+	}
+
 	public static void main(String[] args) throws IOException {
 		BufferedReader serverMessages = new BufferedReader(new InputStreamReader(System.in));
 
@@ -149,6 +172,9 @@ public class Main {
 		System.err.println(initialState);
 
 		Communicator serverComm = new Communicator(serverMessages, System.out);
+
+		// initialize alreadyPlanned
+		List<MAState> alreadyPlanned = new ArrayList<>();
 
 		// Construct initial MA state with only the walls of initial state.
 		// while !isGoalState
@@ -204,11 +230,23 @@ public class Main {
 				saState.otherAgents.putAll(initialState.agents);
 				saState.otherAgents.remove(agentPos);
 
-				ArrayList<SAState> solution = Agent.search(saState, null, new Strategy.StrategyBestFirst(new Heuristic.AStar(saState)));
+				// Removing parts of alreadyPlanned that will colide with saState
+				List<MAState> filterdAlreadyPlanned = cleanMAStateList(alreadyPlanned, agentType, goalType);
+
+				// Every agent has to take previous solutions into account
+				ArrayList<SAState> solution = Agent.search(saState, filterdAlreadyPlanned, new Strategy.StrategyBestFirst(new Heuristic.AStar(saState)));
 				// System.err.printf("Agent: %c -> %d (%s)\n", agentType, solution.size(), solution.stream().map(s -> s.action.toString()).collect(Collectors.toList()));
 
 				currentSolutionMap.put(agentType, solution);
 			}
+
+
+			// Find fastest solution
+
+			// Apply to alreadyPlanned
+			// alreadyPlanned = applySolution(alreadyPlanned, solution)
+
+
 		}
 
 		// Find fastest agent for each goal and execute sequentially
