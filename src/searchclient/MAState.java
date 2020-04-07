@@ -31,7 +31,7 @@ public class MAState {
 	private int g;
 
 	public MAState(MAState parent, List<Command> actions) {
-		this.actions = actions;
+		this.actions = new ArrayList<>(actions);
 		this.domain = parent.domain;
 		this.parent = parent;
 		this.g = parent.g() + 1;
@@ -206,6 +206,14 @@ public class MAState {
 			plan.add(n);
 			n = n.parent;
 		}
+		Collections.reverse(plan);
+		return plan;
+	}
+
+	public ArrayList<MAState> extractPlanWithInitial() {
+		ArrayList<MAState> plan = new ArrayList<>();
+		for (MAState state = this; state != null; state = state.parent)
+			plan.add(state);
 		Collections.reverse(plan);
 		return plan;
 	}

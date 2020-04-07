@@ -149,7 +149,7 @@ public class Main {
 
 		Communicator serverComm = new Communicator(serverMessages, System.out);
 
-		// Construct initial MA state with only the walls of initial state.
+		// Construct initial MA solution consisting only of the initial state
 		// while !isGoalState
 		//   Choose single agent-goal pair such that agent fills goal fastest
 		//     - Filter out the part of alreadyplanned that happens before the agent can move
@@ -159,43 +159,61 @@ public class Main {
 		//     Copy box and agent
 		//
 
+		int numAgents = initialState.agents.size();
 
+		List<MAState> maSolution = new ArrayList<>(Collections.singletonList(initialState));
 
-		// Goal -> Agent -> "time"
-		Map<Position, Map<Character, List<MAState>>> solutions = new HashMap<>();
+		// Keep track of how many actions each agent has already performed
+		int[] actionsPerformed = new int[numAgents];
+		// All agents have initially performed 0 actions
+		Arrays.fill(actionsPerformed, 0);
 
-		for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
-			Position goalPos = goal.getKey();
-			Character goalType = goal.getValue();
+		while (!maSolution.get(maSolution.size() - 1).isGoalState()) {
 
-			HashMap<Character, List<MAState>> currentSolutionMap = new HashMap<>();
-			solutions.put(goalPos, currentSolutionMap);
+			List<MAState> fastestSASolution = null;
+			int fastestAgent = -1;
 
-			for (Map.Entry<Position, Character> agent : initialState.agents.entrySet()) {
-				Position agentPos = agent.getKey();
-				Character agentType = agent.getValue();
+			// Find single agent-goal pair such that agent fills goal fastest
+			for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
+				Position goalPos = goal.getKey();
+				Character goalType = goal.getValue();
 
-				// Only agents that match the color of the boxes for the goal
-				if (!initialState.color.get(agentType).equals(initialState.color.get(goalType)))
+				if (maSolution.get(maSolution.size() - 1).isGoalSatisfied(goalPos))
 					continue;
 
-				ArrayList<MAState> solution = Agent.search(agentType, initialState, Collections.singletonList(initialState), new Strategy.StrategyBestFirst(new Heuristic.AStar(initialState)));
-				// System.err.printf("Agent: %c -> %d (%s)\n", agentType, solution.size(), solution.stream().map(s -> s.action.toString()).collect(Collectors.toList()));
+				for (Map.Entry<Position, Character> agent : initialState.agents.entrySet()) {
+					Position agentPos = agent.getKey();
+					char agentType = agent.getValue();
+					int agentId = Character.getNumericValue(agentType);
 
-				currentSolutionMap.put(agentType, solution);
+					int moves = actionsPerformed[agentId];
+					MAState state = maSolution.get(moves);
+
+					// TODO:
+					//  state is just the first state in the sublist
+					//  so it is redundant in Agent.search.
+					ArrayList<MAState> saSolution = Agent.search(agentType, goalPos, state, maSolution.subList(moves, maSolution.size()),
+						new Strategy.StrategyBestFirst(new Heuristic.AStar(state)));
+
+					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
+						fastestSASolution = saSolution;
+						fastestAgent = agentId;
+					}
+				}
 			}
+
+			assert fastestSASolution != null;
+
+			maSolution = fastestSASolution;
+
+			// Note how much the agent has moved
+			actionsPerformed[fastestAgent] += fastestSASolution.size() - 1;
+
 		}
 
-		// Find fastest agent for each goal and execute sequentially
-		// Strong (and wrong) assumption that agents only win one goal!
-		for (Map.Entry<Position, Map<Character, List<MAState>>> entry : solutions.entrySet()) {
-			Position goalPos = entry.getKey();
-			Map<Character, List<MAState>> agentSolutions = entry.getValue();
-			Map.Entry<Character, List<MAState>> fastest = Collections.min(agentSolutions.entrySet(), Comparator.comparing(x -> x.getValue().size()));
-
-			for (MAState state : fastest.getValue()) {
-				System.err.println(state.actions + " => " + serverComm.send(state.actions));
-			}
+		for (MAState state : maSolution) {
+			if (!state.isInitialState())
+				serverComm.send(state.actions);
 		}
 	}
 }

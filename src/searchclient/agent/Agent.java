@@ -2,6 +2,7 @@ package searchclient.agent;
 
 import searchclient.Command;
 import searchclient.MAState;
+import searchclient.Position;
 import searchclient.util.Memory;
 
 import java.util.ArrayList;
@@ -10,7 +11,7 @@ import java.util.List;
 
 public class Agent {
 
-	public static ArrayList<MAState> search(char agent, MAState initialState, List<MAState> alreadyPlanned, Strategy strategy) {
+	public static ArrayList<MAState> search(char agent, Position goalPos, MAState initialState, List<MAState> alreadyPlanned, Strategy strategy) {
 		System.err.format("Search starting with strategy %s.\n", strategy.toString());
 		strategy.addToFrontier(initialState);
 
@@ -32,13 +33,13 @@ public class Agent {
 					strategy.describeState(leafState),
 					Memory.stringRep()));
 
-			if (leafState.isGoalStateForAgent(agent)) {
+			if (leafState.isGoalSatisfied(goalPos)) {
 				System.err.println(String.join("\t",
 					strategy.searchStatus(),
 					strategy.describeState(leafState),
 					Memory.stringRep()));
 
-				return leafState.extractPlan();
+				return leafState.extractPlanWithInitial();
 			}
 
 			// Pick out state based on leafState.g() and alreadyPlanned list.
