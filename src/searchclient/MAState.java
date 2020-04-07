@@ -69,27 +69,17 @@ public class MAState {
 	}
 
 	public boolean isGoalState() {
-		// Antagelse: Single agent states har ikke agent goals
-		for (Map.Entry<Position, Character> goal : this.goals.entrySet()) {
-			Position pos = goal.getKey();
-			Character g = goal.getValue();
-			Character b = this.boxes.get(pos);
-			if (!g.equals(b)) return false;
-		}
+		for (Position goalPos : this.goals.keySet())
+			if (!this.isGoalSatisfied(goalPos))
+				return false;
 		return true;
 	}
 
-	public boolean isGoalStateForAgent(char agent) {
-		String agentColor = this.color.get(agent);
-
-		// Antagelse: Single agent states har ikke agent goals
-		for (Map.Entry<Position, Character> goal : this.goals.entrySet()) {
-			Position pos = goal.getKey();
-			Character g = goal.getValue();
-			Character b = this.boxes.get(pos);
-			if (this.color.get(g).equals(agentColor) && !g.equals(b)) return false;
-		}
-		return true;
+	public boolean isGoalSatisfied(Position goalPos) {
+		Character g = this.goals.get(goalPos);
+		Character a = this.agents.get(goalPos);
+		Character b = this.boxes.get(goalPos);
+		return g.equals(a) || g.equals(b);
 	}
 
 	public ArrayList<MAState> getExpandedStates(char agent, MAState nextState) {
