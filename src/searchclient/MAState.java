@@ -26,12 +26,12 @@ public class MAState {
 	public final Map<Character, String> color;
 
 	public MAState parent;
-	public final Command action;
+	public final List<Command> actions;
 
 	private int g;
 
-	public MAState(MAState parent, Command action) {
-		this.action = action;
+	public MAState(MAState parent, List<Command> actions) {
+		this.actions = actions;
 		this.domain = parent.domain;
 		this.parent = parent;
 		this.g = parent.g() + 1;
@@ -42,12 +42,14 @@ public class MAState {
 		this.goals = parent.goals;
 		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
+
+		this.applyActions(actions);
 	}
 
 	public MAState(int width, int height, String domain) {
 		this.domain = domain;
 		this.parent = null;
-		this.action = null;
+		this.actions = null;
 		this.g = 0;
 		this.width = width;
 		this.height = height;
@@ -91,15 +93,7 @@ public class MAState {
 	}
 
 	public ArrayList<MAState> getExpandedStates(char agent, MAState nextState) {
-		Position agentPos = null;
-		for (Map.Entry<Position, Character> entry : this.agents.entrySet()) {
-			if (entry.getValue() == agent) {
-				agentPos = entry.getKey();
-			}
-		}
-
-		assert agentPos != null;
-
+		Position agentPos = this.getPositionOfAgent(agent);
 		String agentColor = this.color.get(agent);
 
 		ArrayList<MAState> expandedStates = new ArrayList<>();
@@ -109,10 +103,13 @@ public class MAState {
 			Position newAgentPos = agentPos.add(agentDir);
 
 			if (this.cellIsFree(newAgentPos) && nextState.cellIsFree(newAgentPos)) {
-				MAState newState = new MAState(this, new Command.Move(agentDir));
+				ArrayList<Command> otherCommands = new ArrayList<>(nextState.actions);
+				otherCommands.set(Character.getNumericValue(agent), new Command.Move(agentDir));
 
-				newState.agents.remove(agentPos);
-				newState.agents.put(newAgentPos, agent);
+				MAState newState = new MAState(this, otherCommands);
+
+				// newState.agents.remove(agentPos);
+				// newState.agents.put(newAgentPos, agent);
 
 				expandedStates.add(newState);
 			}
@@ -131,13 +128,16 @@ public class MAState {
 
 					// Check if there's something on the cell to which the agent is moving
 					if (this.cellIsFree(newBoxPos) && nextState.cellIsFree(newBoxPos)) {
-						MAState newState = new MAState(this, new Command.Push(agentDir, boxDir));
+						ArrayList<Command> otherCommands = new ArrayList<>(nextState.actions);
+						otherCommands.set(Character.getNumericValue(agent), new Command.Push(agentDir, boxDir));
 
-						newState.agents.remove(agentPos);
-						newState.agents.put(newAgentPos, agent);
+						MAState newState = new MAState(this, otherCommands);
 
-						Character box = newState.boxes.remove(boxPos);
-						newState.boxes.put(newBoxPos, box);
+						// newState.agents.remove(agentPos);
+						// newState.agents.put(newAgentPos, agent);
+
+						// Character box = newState.boxes.remove(boxPos);
+						// newState.boxes.put(newBoxPos, box);
 
 						expandedStates.add(newState);
 					}
@@ -155,13 +155,16 @@ public class MAState {
 					Position newAgentPos = agentPos.add(agentDir);
 
 					if (this.cellIsFree(newAgentPos) && this.cellIsFree(newAgentPos)) {
-						MAState newState = new MAState(this, new Command.Pull(agentDir, boxDir));
+						ArrayList<Command> otherCommands = new ArrayList<>(nextState.actions);
+						otherCommands.set(Character.getNumericValue(agent), new Command.Pull(agentDir, boxDir));
 
-						newState.agents.remove(agentPos);
-						newState.agents.put(newAgentPos, agent);
+						MAState newState = new MAState(this, otherCommands);
 
-						Character box = newState.boxes.remove(boxPos);
-						newState.boxes.put(agentPos, box);
+						// newState.agents.remove(agentPos);
+						// newState.agents.put(newAgentPos, agent);
+
+						// Character box = newState.boxes.remove(boxPos);
+						// newState.boxes.put(agentPos, box);
 
 						expandedStates.add(newState);
 					}
@@ -170,11 +173,24 @@ public class MAState {
 		}
 
 		// NoOp
-		expandedStates.add(new MAState(this, new Command.NoOp()));
+		ArrayList<Command> otherCommands = new ArrayList<>(nextState.actions);
+		otherCommands.set(Character.getNumericValue(agent), new Command.NoOp());
+
+		MAState newState = new MAState(this, otherCommands);
+		expandedStates.add(newState);
 		// Kommer sikkert til at fucke massivt med DFS og Greedy lol
 
 		Collections.shuffle(expandedStates, RNG);
 		return expandedStates;
+	}
+
+	private Position getPositionOfAgent(char agent) {
+		for (Map.Entry<Position, Character> entry : this.agents.entrySet()) {
+			if (entry.getValue() == agent) {
+				return entry.getKey();
+			}
+		}
+		throw new RuntimeException("Agent not found: " + agent);
 	}
 
 	public boolean cellIsFree(Position pos) {
@@ -202,6 +218,47 @@ public class MAState {
 		}
 		Collections.reverse(plan);
 		return plan;
+	}
+
+	private void applyActions(List<Command> actions) {
+		TreeMap<Position, Character> agents = new TreeMap<>(this.agents);
+
+		for (Map.Entry<Position, Character> agent : agents.entrySet()) {
+			Position agentPos = agent.getKey();
+			char agentType = agent.getValue();
+			int agentId = Character.getNumericValue(agentType);
+
+			Command command = actions.get(agentId);
+			if (command instanceof Command.Move) {
+				Position newAgentPos = agentPos.add(((Command.Move) command).getAgentDir());
+
+				this.agents.remove(agentPos);
+				this.agents.put(newAgentPos, agentType);
+
+			} else if (command instanceof Command.Push) {
+				Position newAgentPos = agentPos.add(((Command.Push) command).getAgentDir());
+				Position boxPos = newAgentPos;
+				Position newBoxPos = boxPos.add(((Command.Push) command).getBoxDir());
+
+				this.agents.remove(agentPos);
+				this.agents.put(newAgentPos, agentType);
+
+				Character box = this.boxes.remove(boxPos);
+				this.boxes.put(newBoxPos, box);
+
+			} else if (command instanceof Command.Pull) {
+				Position boxPos = agentPos.add(((Command.Pull) command).getBoxDir());
+				Position newAgentPos = agentPos.add(((Command.Pull) command).getAgentDir());
+				Position newBoxPos = agentPos;
+
+				this.agents.remove(agentPos);
+				this.agents.put(newAgentPos, agentType);
+
+				Character box = this.boxes.remove(boxPos);
+				this.boxes.put(newBoxPos, box);
+
+			}
+		}
 	}
 
 	@Override

@@ -1,9 +1,11 @@
 package searchclient.agent;
 
+import searchclient.Command;
 import searchclient.MAState;
 import searchclient.util.Memory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Agent {
@@ -50,7 +52,19 @@ public class Agent {
 			// Need to identify agents by character rather than position
 			// as position changes across states.
 
-			for (MAState n : leafState.getExpandedStates(agent, leafState)) { // The list of expanded states is shuffled randomly; see State.java.
+			boolean insideList = leafState.g() + 1 < alreadyPlanned.size();
+			int numAgents = leafState.agents.size();
+
+			// TODO: Dynamically add NoOp states to fill alreadyPlanned enough to just index
+			MAState state;
+			if (insideList) {
+				List<Command> actions = alreadyPlanned.get(Math.min(alreadyPlanned.size() - 1, leafState.g() + 1)).actions;
+				state = new MAState(leafState, actions);
+			} else {
+				state = new MAState(leafState, Collections.nCopies(numAgents, new Command.NoOp()));
+			}
+
+			for (MAState n : leafState.getExpandedStates(agent, state)) { // The list of expanded states is shuffled randomly; see State.java.
 				if (!strategy.isExplored(n) && !strategy.inFrontier(n)) {
 					// Apply nextState's moves
 					strategy.addToFrontier(n);

@@ -196,7 +196,7 @@ public class Main {
 				if (!initialState.color.get(agentType).equals(initialState.color.get(goalType)))
 					continue;
 
-				ArrayList<MAState> solution = Agent.search(agentType, initialState, null, new Strategy.StrategyBestFirst(new Heuristic.AStar(initialState)));
+				ArrayList<MAState> solution = Agent.search(agentType, initialState, Collections.singletonList(initialState), new Strategy.StrategyBestFirst(new Heuristic.AStar(initialState)));
 				// System.err.printf("Agent: %c -> %d (%s)\n", agentType, solution.size(), solution.stream().map(s -> s.action.toString()).collect(Collectors.toList()));
 
 				currentSolutionMap.put(agentType, solution);
@@ -214,10 +214,7 @@ public class Main {
 			int numAgents = initialState.agents.size();
 
 			for (MAState state : fastest.getValue()) {
-				List<Command> jointAction = new ArrayList<>(Collections.nCopies(numAgents, new Command.NoOp()));
-				jointAction.set(fastestAgent, state.action);
-
-				System.err.println(jointAction + " => " + serverComm.send(jointAction));
+				System.err.println(state.actions + " => " + serverComm.send(state.actions));
 			}
 		}
 	}
