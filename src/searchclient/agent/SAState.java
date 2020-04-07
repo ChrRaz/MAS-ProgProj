@@ -1,7 +1,6 @@
 package searchclient.agent;
 
 import searchclient.Command;
-import searchclient.MAState;
 import searchclient.Position;
 
 import java.util.*;
@@ -26,17 +25,16 @@ public class SAState {
 	public final TreeMap<Position, Character> boxes;
 	public final Map<Position, Character> goals;
 
-	public final Position agentPos;
-	public final TreeMap<Position, Character> otherAgents;
+	public final TreeMap<Position, Character> agents;
+	public final Map<Character, String> color;
 
 	public SAState parent;
 	public final Command action;
 
 	private int g;
 
-	public SAState(SAState parent, Command action, Position agentPos) {
+	public SAState(SAState parent, Command action) {
 		this.action = action;
-		this.agentPos = agentPos;
 		this.domain = parent.domain;
 		this.parent = parent;
 		this.g = parent.g() + 1;
@@ -45,11 +43,11 @@ public class SAState {
 		this.walls = parent.walls;
 		this.boxes = new TreeMap<>(parent.boxes);
 		this.goals = parent.goals;
-		this.otherAgents = parent.otherAgents;
+		this.agents = new TreeMap<>(parent.agents);
+		this.color = parent.color;
 	}
 
-	public SAState(int width, int height, Position agentPos, String domain) {
-		this.agentPos = agentPos;
+	public SAState(int width, int height, String domain) {
 		this.domain = domain;
 		this.parent = null;
 		this.action = null;
@@ -59,7 +57,8 @@ public class SAState {
 		this.walls = new HashSet<>();
 		this.boxes = new TreeMap<>();
 		this.goals = new HashMap<>();
-		this.otherAgents = new TreeMap<>();
+		this.agents = new TreeMap<>();
+		this.color = new HashMap<>();
 	}
 
 	public int g() {
@@ -81,31 +80,64 @@ public class SAState {
 		return true;
 	}
 
-	public ArrayList<SAState> getExpandedStates(MAState nextState) {
+	public boolean isGoalStateForAgent(char agent) {
+		String agentColor = this.color.get(agent);
+
+		// Antagelse: Single agent states har ikke agent goals
+		for (Map.Entry<Position, Character> goal : this.goals.entrySet()) {
+			Position pos = goal.getKey();
+			Character g = goal.getValue();
+			Character b = this.boxes.get(pos);
+			if (this.color.get(g).equals(agentColor) && !g.equals(b)) return false;
+		}
+		return true;
+	}
+
+	public ArrayList<SAState> getExpandedStates(char agent, SAState nextState) {
+		Position agentPos = null;
+		for (Map.Entry<Position, Character> entry : this.agents.entrySet()) {
+			if (entry.getValue() == agent) {
+				agentPos = entry.getKey();
+			}
+		}
+
+		assert agentPos != null;
+
+		String agentColor = this.color.get(agent);
+
 		ArrayList<SAState> expandedStates = new ArrayList<>();
 
 		// Move
 		for (Command.Dir agentDir : Command.Dir.values()) {
-			Position newAgentPos = this.agentPos.add(agentDir);
+			Position newAgentPos = agentPos.add(agentDir);
 
-			if (this.cellIsFree(newAgentPos) && nextState.cellIsFree(newAgentPos))
-				expandedStates.add(new SAState(this, new Command.Move(agentDir), newAgentPos));
+			if (this.cellIsFree(newAgentPos) && nextState.cellIsFree(newAgentPos)) {
+				SAState newState = new SAState(this, new Command.Move(agentDir));
+
+				newState.agents.remove(agentPos);
+				newState.agents.put(newAgentPos, agent);
+
+				expandedStates.add(newState);
+			}
 		}
 
 		// Push
 		for (Command.Dir agentDir : Command.Dir.values()) {
-			Position newAgentPos = this.agentPos.add(agentDir);
+			Position newAgentPos = agentPos.add(agentDir);
 
 			// Make sure that there's actually a box to move
-			if (this.boxAt(newAgentPos) && nextState.boxAt(newAgentPos)) {
+			if (this.boxAt(newAgentPos, agentColor) && nextState.boxAt(newAgentPos, agentColor)) {
 				Position boxPos = newAgentPos;
 
 				for (Command.Dir boxDir : Command.Dir.values()) {
 					Position newBoxPos = boxPos.add(boxDir);
 
 					// Check if there's something on the cell to which the agent is moving
-					if (this.cellIsFree(newBoxPos)) {
-						SAState newState = new SAState(this, new Command.Push(agentDir, boxDir), newAgentPos);
+					if (this.cellIsFree(newBoxPos) && nextState.cellIsFree(newBoxPos)) {
+						SAState newState = new SAState(this, new Command.Push(agentDir, boxDir));
+
+						newState.agents.remove(agentPos);
+						newState.agents.put(newAgentPos, agent);
 
 						Character box = newState.boxes.remove(boxPos);
 						newState.boxes.put(newBoxPos, box);
@@ -118,18 +150,21 @@ public class SAState {
 
 		// Pull
 		for (Command.Dir boxDir : Command.Dir.values()) {
-			Position boxPos = this.agentPos.add(boxDir);
+			Position boxPos = agentPos.add(boxDir);
 
-			if (this.boxAt(boxPos) && nextState.boxAt(boxPos)) {
+			if (this.boxAt(boxPos, agentColor) && nextState.boxAt(boxPos, agentColor)) {
 
 				for (Command.Dir agentDir : Command.Dir.values()) {
-					Position newAgentPos = this.agentPos.add(agentDir);
+					Position newAgentPos = agentPos.add(agentDir);
 
 					if (this.cellIsFree(newAgentPos) && this.cellIsFree(newAgentPos)) {
-						SAState newState = new SAState(this, new Command.Pull(agentDir, boxDir), newAgentPos);
+						SAState newState = new SAState(this, new Command.Pull(agentDir, boxDir));
+
+						newState.agents.remove(agentPos);
+						newState.agents.put(newAgentPos, agent);
 
 						Character box = newState.boxes.remove(boxPos);
-						newState.boxes.put(this.agentPos, box);
+						newState.boxes.put(agentPos, box);
 
 						expandedStates.add(newState);
 					}
@@ -138,7 +173,7 @@ public class SAState {
 		}
 
 		// NoOp
-		expandedStates.add(new SAState(this, new Command.NoOp(), this.agentPos));
+		expandedStates.add(new SAState(this, new Command.NoOp()));
 		// Kommer sikkert til at fucke massivt med DFS og Greedy lol
 
 		Collections.shuffle(expandedStates, RNG);
@@ -153,8 +188,12 @@ public class SAState {
 		return this.boxes.containsKey(pos);
 	}
 
+	public boolean boxAt(Position pos, String color) {
+		return this.boxAt(pos) && this.color.get(this.boxes.get(pos)).equals(color);
+	}
+
 	public boolean agentAt(Position pos) {
-		return this.agentPos.equals(pos) || this.otherAgents.containsKey(pos);
+		return this.agents.containsKey(pos);
 	}
 
 	public ArrayList<SAState> extractPlan() {
@@ -183,7 +222,7 @@ public class SAState {
 			hash = hash * prime + type;
 		}
 
-		for (Map.Entry<Position, Character> agent : this.otherAgents.entrySet()) {
+		for (Map.Entry<Position, Character> agent : this.agents.entrySet()) {
 			Position pos = agent.getKey();
 			Character type = agent.getValue();
 
@@ -205,9 +244,7 @@ public class SAState {
 			return false;
 
 		SAState other = (SAState) obj;
-		if (!this.agentPos.equals(other.agentPos))
-			return false;
-		if (!this.otherAgents.equals(other.otherAgents))
+		if (!this.agents.equals(other.agents))
 			return false;
 		if (!this.boxes.equals(other.boxes))
 			return false;
@@ -223,10 +260,8 @@ public class SAState {
 			for (int col = 0; col < this.width; col++) {
 				Position pos = new Position(row, col);
 
-				if (this.agentPos.equals(pos)) {
-					s.append("0");
-				} else if (this.otherAgents.containsKey(pos)) {
-					s.append("*");
+				if (this.agents.containsKey(pos)) {
+					s.append(this.agents.get(pos));
 				} else if (this.boxAt(pos)) {
 					s.append(Character.toLowerCase(this.boxes.get(pos)));
 				} else if (this.goals.containsKey(pos)) {

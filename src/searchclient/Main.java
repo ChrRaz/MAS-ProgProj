@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class Main {
 
-	public static MAState parseLevel(BufferedReader serverMessages) throws IOException {
+	public static SAState parseLevel(BufferedReader serverMessages) throws IOException {
 
 		String line;
 
@@ -63,7 +63,7 @@ public class Main {
 		}
 
 		System.out.printf("Level is %dx%d\n", width, height);
-		MAState initialState = new MAState(width, height, domain);
+		SAState initialState = new SAState(width, height, domain);
 
 		for (int i = 0; i < lines.size(); i++) {
 			// Make sure that input is rectangular
@@ -145,7 +145,7 @@ public class Main {
 		System.out.println("Meme-o-tron 2000");
 
 		// Test that we can solve a singe-agent level
-		MAState initialState = parseLevel(serverMessages);
+		SAState initialState = parseLevel(serverMessages);
 		System.err.println(initialState);
 
 		Communicator serverComm = new Communicator(serverMessages, System.out);
@@ -193,18 +193,11 @@ public class Main {
 				Position agentPos = agent.getKey();
 				Character agentType = agent.getValue();
 
+				// Only agents that match the color of the boxes for the goal
 				if (!initialState.color.get(agentType).equals(initialState.color.get(goalType)))
 					continue;
 
-				SAState saState = new SAState(initialState.width, initialState.height, agentPos, initialState.domain);
-				saState.walls.addAll(newWalls);
-				saState.walls.remove(agentPos);
-				saState.goals.put(goalPos, goalType);
-				saState.boxes.putAll(relevantBoxes);
-				saState.otherAgents.putAll(initialState.agents);
-				saState.otherAgents.remove(agentPos);
-
-				ArrayList<SAState> solution = Agent.search(saState, null, new Strategy.StrategyBestFirst(new Heuristic.AStar(saState)));
+				ArrayList<SAState> solution = Agent.search(agentType, initialState, null, new Strategy.StrategyBestFirst(new Heuristic.AStar(initialState)));
 				// System.err.printf("Agent: %c -> %d (%s)\n", agentType, solution.size(), solution.stream().map(s -> s.action.toString()).collect(Collectors.toList()));
 
 				currentSolutionMap.put(agentType, solution);
