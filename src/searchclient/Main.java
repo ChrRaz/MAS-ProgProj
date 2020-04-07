@@ -171,23 +171,6 @@ public class Main {
 			HashMap<Character, List<MAState>> currentSolutionMap = new HashMap<>();
 			solutions.put(goalPos, currentSolutionMap);
 
-			TreeMap<Position, Character> relevantBoxes = new TreeMap<>();
-			Set<Position> newWalls = new HashSet<>(initialState.walls);
-
-			for (Map.Entry<Position, Character> box : initialState.boxes.entrySet()) {
-				Position boxPos = box.getKey();
-				Character boxType = box.getValue();
-
-				if (goalType.equals(boxType)) {
-					relevantBoxes.put(boxPos, boxType);
-				} else {
-					newWalls.add(boxPos);
-				}
-			}
-
-			// Wallify all agents
-			newWalls.addAll(initialState.agents.keySet());
-
 			for (Map.Entry<Position, Character> agent : initialState.agents.entrySet()) {
 				Position agentPos = agent.getKey();
 				Character agentType = agent.getValue();
@@ -209,9 +192,6 @@ public class Main {
 			Position goalPos = entry.getKey();
 			Map<Character, List<MAState>> agentSolutions = entry.getValue();
 			Map.Entry<Character, List<MAState>> fastest = Collections.min(agentSolutions.entrySet(), Comparator.comparing(x -> x.getValue().size()));
-
-			int fastestAgent = Character.getNumericValue(fastest.getKey());
-			int numAgents = initialState.agents.size();
 
 			for (MAState state : fastest.getValue()) {
 				System.err.println(state.actions + " => " + serverComm.send(state.actions));
