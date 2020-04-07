@@ -61,7 +61,7 @@ public class Main {
 			height++;
 		}
 
-		System.out.printf("Level is %dx%d\n", width, height);
+		System.err.printf("Level is %dx%d\n", width, height);
 		MAState initialState = new MAState(width, height, domain);
 
 		for (int i = 0; i < lines.size(); i++) {
