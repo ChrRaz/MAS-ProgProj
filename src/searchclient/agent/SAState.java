@@ -81,14 +81,14 @@ public class SAState {
 		return true;
 	}
 
-	public ArrayList<SAState> getExpandedStates(MAState alreadyPlanned) {
+	public ArrayList<SAState> getExpandedStates(MAState nextState) {
 		ArrayList<SAState> expandedStates = new ArrayList<>();
 
 		// Move
 		for (Command.Dir agentDir : Command.Dir.values()) {
 			Position newAgentPos = this.agentPos.add(agentDir);
 
-			if (this.cellIsFree(newAgentPos))
+			if (this.cellIsFree(newAgentPos) && nextState.cellIsFree(newAgentPos))
 				expandedStates.add(new SAState(this, new Command.Move(agentDir), newAgentPos));
 		}
 
@@ -97,7 +97,7 @@ public class SAState {
 			Position newAgentPos = this.agentPos.add(agentDir);
 
 			// Make sure that there's actually a box to move
-			if (this.boxAt(newAgentPos)) {
+			if (this.boxAt(newAgentPos) && nextState.boxAt(newAgentPos)) {
 				Position boxPos = newAgentPos;
 
 				for (Command.Dir boxDir : Command.Dir.values()) {
@@ -120,12 +120,12 @@ public class SAState {
 		for (Command.Dir boxDir : Command.Dir.values()) {
 			Position boxPos = this.agentPos.add(boxDir);
 
-			if (this.boxAt(boxPos)) {
+			if (this.boxAt(boxPos) && nextState.boxAt(boxPos)) {
 
 				for (Command.Dir agentDir : Command.Dir.values()) {
 					Position newAgentPos = this.agentPos.add(agentDir);
 
-					if (this.cellIsFree(newAgentPos)) {
+					if (this.cellIsFree(newAgentPos) && this.cellIsFree(newAgentPos)) {
 						SAState newState = new SAState(this, new Command.Pull(agentDir, boxDir), newAgentPos);
 
 						Character box = newState.boxes.remove(boxPos);
