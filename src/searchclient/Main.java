@@ -2,7 +2,6 @@ package searchclient;
 
 import searchclient.agent.Agent;
 import searchclient.agent.Heuristic;
-import searchclient.agent.SAState;
 import searchclient.agent.Strategy;
 
 import java.io.BufferedReader;
@@ -14,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class Main {
 
-	public static SAState parseLevel(BufferedReader serverMessages) throws IOException {
+	public static MAState parseLevel(BufferedReader serverMessages) throws IOException {
 
 		String line;
 
@@ -63,7 +62,7 @@ public class Main {
 		}
 
 		System.out.printf("Level is %dx%d\n", width, height);
-		SAState initialState = new SAState(width, height, domain);
+		MAState initialState = new MAState(width, height, domain);
 
 		for (int i = 0; i < lines.size(); i++) {
 			// Make sure that input is rectangular
@@ -145,7 +144,7 @@ public class Main {
 		System.out.println("Meme-o-tron 2000");
 
 		// Test that we can solve a singe-agent level
-		SAState initialState = parseLevel(serverMessages);
+		MAState initialState = parseLevel(serverMessages);
 		System.err.println(initialState);
 
 		Communicator serverComm = new Communicator(serverMessages, System.out);
@@ -163,13 +162,13 @@ public class Main {
 
 
 		// Goal -> Agent -> "time"
-		Map<Position, Map<Character, List<SAState>>> solutions = new HashMap<>();
+		Map<Position, Map<Character, List<MAState>>> solutions = new HashMap<>();
 
 		for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
 			Position goalPos = goal.getKey();
 			Character goalType = goal.getValue();
 
-			HashMap<Character, List<SAState>> currentSolutionMap = new HashMap<>();
+			HashMap<Character, List<MAState>> currentSolutionMap = new HashMap<>();
 			solutions.put(goalPos, currentSolutionMap);
 
 			TreeMap<Position, Character> relevantBoxes = new TreeMap<>();
@@ -197,7 +196,7 @@ public class Main {
 				if (!initialState.color.get(agentType).equals(initialState.color.get(goalType)))
 					continue;
 
-				ArrayList<SAState> solution = Agent.search(agentType, initialState, null, new Strategy.StrategyBestFirst(new Heuristic.AStar(initialState)));
+				ArrayList<MAState> solution = Agent.search(agentType, initialState, null, new Strategy.StrategyBestFirst(new Heuristic.AStar(initialState)));
 				// System.err.printf("Agent: %c -> %d (%s)\n", agentType, solution.size(), solution.stream().map(s -> s.action.toString()).collect(Collectors.toList()));
 
 				currentSolutionMap.put(agentType, solution);
@@ -206,15 +205,15 @@ public class Main {
 
 		// Find fastest agent for each goal and execute sequentially
 		// Strong (and wrong) assumption that agents only win one goal!
-		for (Map.Entry<Position, Map<Character, List<SAState>>> entry : solutions.entrySet()) {
+		for (Map.Entry<Position, Map<Character, List<MAState>>> entry : solutions.entrySet()) {
 			Position goalPos = entry.getKey();
-			Map<Character, List<SAState>> agentSolutions = entry.getValue();
-			Map.Entry<Character, List<SAState>> fastest = Collections.min(agentSolutions.entrySet(), Comparator.comparing(x -> x.getValue().size()));
+			Map<Character, List<MAState>> agentSolutions = entry.getValue();
+			Map.Entry<Character, List<MAState>> fastest = Collections.min(agentSolutions.entrySet(), Comparator.comparing(x -> x.getValue().size()));
 
 			int fastestAgent = Character.getNumericValue(fastest.getKey());
 			int numAgents = initialState.agents.size();
 
-			for (SAState state : fastest.getValue()) {
+			for (MAState state : fastest.getValue()) {
 				List<Command> jointAction = new ArrayList<>(Collections.nCopies(numAgents, new Command.NoOp()));
 				jointAction.set(fastestAgent, state.action);
 

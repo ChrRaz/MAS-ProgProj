@@ -1,11 +1,8 @@
-package searchclient.agent;
-
-import searchclient.Command;
-import searchclient.Position;
+package searchclient;
 
 import java.util.*;
 
-public class SAState {
+public class MAState {
 	private static final Random RNG = new Random(1);
 
 	public int height, width;
@@ -28,12 +25,12 @@ public class SAState {
 	public final TreeMap<Position, Character> agents;
 	public final Map<Character, String> color;
 
-	public SAState parent;
+	public MAState parent;
 	public final Command action;
 
 	private int g;
 
-	public SAState(SAState parent, Command action) {
+	public MAState(MAState parent, Command action) {
 		this.action = action;
 		this.domain = parent.domain;
 		this.parent = parent;
@@ -47,7 +44,7 @@ public class SAState {
 		this.color = parent.color;
 	}
 
-	public SAState(int width, int height, String domain) {
+	public MAState(int width, int height, String domain) {
 		this.domain = domain;
 		this.parent = null;
 		this.action = null;
@@ -93,7 +90,7 @@ public class SAState {
 		return true;
 	}
 
-	public ArrayList<SAState> getExpandedStates(char agent, SAState nextState) {
+	public ArrayList<MAState> getExpandedStates(char agent, MAState nextState) {
 		Position agentPos = null;
 		for (Map.Entry<Position, Character> entry : this.agents.entrySet()) {
 			if (entry.getValue() == agent) {
@@ -105,14 +102,14 @@ public class SAState {
 
 		String agentColor = this.color.get(agent);
 
-		ArrayList<SAState> expandedStates = new ArrayList<>();
+		ArrayList<MAState> expandedStates = new ArrayList<>();
 
 		// Move
 		for (Command.Dir agentDir : Command.Dir.values()) {
 			Position newAgentPos = agentPos.add(agentDir);
 
 			if (this.cellIsFree(newAgentPos) && nextState.cellIsFree(newAgentPos)) {
-				SAState newState = new SAState(this, new Command.Move(agentDir));
+				MAState newState = new MAState(this, new Command.Move(agentDir));
 
 				newState.agents.remove(agentPos);
 				newState.agents.put(newAgentPos, agent);
@@ -134,7 +131,7 @@ public class SAState {
 
 					// Check if there's something on the cell to which the agent is moving
 					if (this.cellIsFree(newBoxPos) && nextState.cellIsFree(newBoxPos)) {
-						SAState newState = new SAState(this, new Command.Push(agentDir, boxDir));
+						MAState newState = new MAState(this, new Command.Push(agentDir, boxDir));
 
 						newState.agents.remove(agentPos);
 						newState.agents.put(newAgentPos, agent);
@@ -158,7 +155,7 @@ public class SAState {
 					Position newAgentPos = agentPos.add(agentDir);
 
 					if (this.cellIsFree(newAgentPos) && this.cellIsFree(newAgentPos)) {
-						SAState newState = new SAState(this, new Command.Pull(agentDir, boxDir));
+						MAState newState = new MAState(this, new Command.Pull(agentDir, boxDir));
 
 						newState.agents.remove(agentPos);
 						newState.agents.put(newAgentPos, agent);
@@ -173,7 +170,7 @@ public class SAState {
 		}
 
 		// NoOp
-		expandedStates.add(new SAState(this, new Command.NoOp()));
+		expandedStates.add(new MAState(this, new Command.NoOp()));
 		// Kommer sikkert til at fucke massivt med DFS og Greedy lol
 
 		Collections.shuffle(expandedStates, RNG);
@@ -196,9 +193,9 @@ public class SAState {
 		return this.agents.containsKey(pos);
 	}
 
-	public ArrayList<SAState> extractPlan() {
-		ArrayList<SAState> plan = new ArrayList<>();
-		SAState n = this;
+	public ArrayList<MAState> extractPlan() {
+		ArrayList<MAState> plan = new ArrayList<>();
+		MAState n = this;
 		while (!n.isInitialState()) {
 			plan.add(n);
 			n = n.parent;
@@ -243,7 +240,7 @@ public class SAState {
 		if (this.getClass() != obj.getClass())
 			return false;
 
-		SAState other = (SAState) obj;
+		MAState other = (MAState) obj;
 		if (!this.agents.equals(other.agents))
 			return false;
 		if (!this.boxes.equals(other.boxes))

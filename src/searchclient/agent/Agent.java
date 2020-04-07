@@ -1,5 +1,6 @@
 package searchclient.agent;
 
+import searchclient.MAState;
 import searchclient.util.Memory;
 
 import java.util.ArrayList;
@@ -7,7 +8,7 @@ import java.util.List;
 
 public class Agent {
 
-	public static ArrayList<SAState> search(char agent, SAState initialState, List<SAState> alreadyPlanned, Strategy strategy) {
+	public static ArrayList<MAState> search(char agent, MAState initialState, List<MAState> alreadyPlanned, Strategy strategy) {
 		System.err.format("Search starting with strategy %s.\n", strategy.toString());
 		strategy.addToFrontier(initialState);
 
@@ -21,7 +22,7 @@ public class Agent {
 				return null;
 			}
 
-			SAState leafState = strategy.getAndRemoveLeaf();
+			MAState leafState = strategy.getAndRemoveLeaf();
 
 			if (iterations % 1000 == 0)
 				System.err.println(String.join("\t",
@@ -49,7 +50,7 @@ public class Agent {
 			// Need to identify agents by character rather than position
 			// as position changes across states.
 
-			for (SAState n : leafState.getExpandedStates(agent, leafState)) { // The list of expanded states is shuffled randomly; see State.java.
+			for (MAState n : leafState.getExpandedStates(agent, leafState)) { // The list of expanded states is shuffled randomly; see State.java.
 				if (!strategy.isExplored(n) && !strategy.inFrontier(n)) {
 					// Apply nextState's moves
 					strategy.addToFrontier(n);

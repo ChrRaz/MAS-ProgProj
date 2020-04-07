@@ -1,15 +1,16 @@
 package searchclient.agent;
 
 import searchclient.Command;
+import searchclient.MAState;
 import searchclient.Position;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public abstract class Heuristic implements Comparator<SAState> {
+public abstract class Heuristic implements Comparator<MAState> {
     private final List<List<Map<Character, Integer>>> distToGoal;
 
-    public Heuristic(SAState initialState) {
+    public Heuristic(MAState initialState) {
         // Here's a chance to pre-process the static parts of the level.
 
         HashSet<Character> chars = new HashSet<>();
@@ -64,7 +65,7 @@ public abstract class Heuristic implements Comparator<SAState> {
         }
     }
 
-    public int h(SAState n) {
+    public int h(MAState n) {
         int totalDistance = 0;
 
         for (Map.Entry<Position, Character> entry : n.boxes.entrySet()) {
@@ -77,20 +78,20 @@ public abstract class Heuristic implements Comparator<SAState> {
         return totalDistance;
     }
 
-    public abstract int f(SAState n);
+    public abstract int f(MAState n);
 
     @Override
-    public int compare(SAState n1, SAState n2) {
+    public int compare(MAState n1, MAState n2) {
         return this.f(n1) - this.f(n2);
     }
 
     public static class AStar extends Heuristic {
-        public AStar(SAState initialState) {
+        public AStar(MAState initialState) {
             super(initialState);
         }
 
         @Override
-        public int f(SAState n) {
+        public int f(MAState n) {
             return n.g() + this.h(n);
         }
 
@@ -103,13 +104,13 @@ public abstract class Heuristic implements Comparator<SAState> {
     public static class WeightedAStar extends Heuristic {
         private int W;
 
-        public WeightedAStar(SAState initialState, int W) {
+        public WeightedAStar(MAState initialState, int W) {
             super(initialState);
             this.W = W;
         }
 
         @Override
-        public int f(SAState n) {
+        public int f(MAState n) {
             return n.g() + this.W * this.h(n);
         }
 
@@ -120,12 +121,12 @@ public abstract class Heuristic implements Comparator<SAState> {
     }
 
     public static class Greedy extends Heuristic {
-        public Greedy(SAState initialState) {
+        public Greedy(MAState initialState) {
             super(initialState);
         }
 
         @Override
-        public int f(SAState n) {
+        public int f(MAState n) {
             return this.h(n);
         }
 
