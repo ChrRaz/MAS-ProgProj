@@ -58,7 +58,7 @@ public class Agent {
 			// TODO: Dynamically add NoOp states to fill alreadyPlanned enough to just index
 			MAState state;
 			if (insideList) {
-				List<Command> actions = alreadyPlanned.get(Math.min(alreadyPlanned.size() - 1, leafState.g() + 1)).actions;
+				List<Command> actions = alreadyPlanned.get(leafState.g() + 1).actions;
 				state = new MAState(leafState, actions);
 			} else {
 				state = new MAState(leafState, Collections.nCopies(numAgents, new Command.NoOp()));
@@ -66,7 +66,6 @@ public class Agent {
 
 			for (MAState n : leafState.getExpandedStates(agent, state)) { // The list of expanded states is shuffled randomly; see State.java.
 				if (!strategy.isExplored(n) && !strategy.inFrontier(n)) {
-					// Apply nextState's moves
 					strategy.addToFrontier(n);
 				}
 			}
