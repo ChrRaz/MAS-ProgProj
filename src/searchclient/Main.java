@@ -146,10 +146,10 @@ public class Main {
 		return alreadyPlanned;
 	}
 
-	public static List<MAState> applySolution(List<MAState> alreadyPlanned, HashMap.Entry<Character, List<SAState>> solution) {
+	public static List<MAState> applySolution(List<MAState> alreadyPlanned, char agentType, List<SAState> stateList,int startTime) {
 
 		// Get agentType
-		Character agentType = solution.getKey();
+
 
 		// Get agentPos
 
@@ -174,7 +174,7 @@ public class Main {
 		Communicator serverComm = new Communicator(serverMessages, System.out);
 
 		// initialize alreadyPlanned
-		List<MAState> alreadyPlanned = new ArrayList<>();
+		List<MAState> alreadyPlanned = new ArrayList<>(Collections.singletonList(initialState));
 
 		// Construct initial MA state with only the walls of initial state.
 		// while !isGoalState
@@ -244,6 +244,8 @@ public class Main {
 			// Find fastest solution
 
 			// Apply to alreadyPlanned
+			// Character agentType = solution.getKey();
+			// List<SAState> stateList = solution.getValue();
 			// alreadyPlanned = applySolution(alreadyPlanned, solution)
 
 
