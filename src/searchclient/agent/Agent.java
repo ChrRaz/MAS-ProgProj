@@ -60,6 +60,9 @@ public class Agent {
 			MAState state;
 			if (insideList) {
 				List<Command> actions = alreadyPlanned.get(leafState.g() + 1).actions;
+				if (!leafState.isApplicable(actions))
+					continue;
+
 				state = new MAState(leafState, actions);
 			} else {
 				state = new MAState(leafState, Collections.nCopies(numAgents, new Command.NoOp()));

@@ -218,6 +218,47 @@ public class MAState {
 		return plan;
 	}
 
+	public boolean isApplicable(List<Command> actions) {
+		for (Map.Entry<Position, Character> agent : this.agents.entrySet()) {
+			Position agentPos = agent.getKey();
+			char agentType = agent.getValue();
+			int agentId = Character.getNumericValue(agentType);
+
+			Command command = actions.get(agentId);
+			if (command instanceof Command.Move) {
+				Position newAgentPos = agentPos.add(((Command.Move) command).getAgentDir());
+
+				if (!this.cellIsFree(newAgentPos))
+					return false;
+
+			} else if (command instanceof Command.Push) {
+				Position newAgentPos = agentPos.add(((Command.Push) command).getAgentDir());
+				Position boxPos = newAgentPos;
+				Position newBoxPos = boxPos.add(((Command.Push) command).getBoxDir());
+				String agentColor = this.color.get(agentType);
+
+				if (!this.boxAt(newAgentPos, agentColor))
+					return false;
+				if (!this.cellIsFree(newBoxPos))
+					return false;
+
+			} else if (command instanceof Command.Pull) {
+				Position boxPos = agentPos.add(((Command.Pull) command).getBoxDir());
+				Position newAgentPos = agentPos.add(((Command.Pull) command).getAgentDir());
+				Position newBoxPos = agentPos;
+				String agentColor = this.color.get(agentType);
+
+				if (!this.boxAt(boxPos, agentColor))
+					return false;
+				if (!this.cellIsFree(newAgentPos))
+					return false;
+
+			}
+		}
+
+		return true;
+	}
+
 	private void applyActions(List<Command> actions) {
 		TreeMap<Position, Character> agents = new TreeMap<>(this.agents);
 
