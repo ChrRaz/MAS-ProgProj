@@ -144,7 +144,7 @@ public class MAState {
 				for (Command.Dir agentDir : Command.Dir.values()) {
 					Position newAgentPos = agentPos.add(agentDir);
 
-					if (this.cellIsFree(newAgentPos) && this.cellIsFree(newAgentPos)) {
+					if (this.cellIsFree(newAgentPos) && nextState.cellIsFree(newAgentPos)) {
 						ArrayList<Command> otherCommands = new ArrayList<>(nextState.actions);
 						otherCommands.set(Character.getNumericValue(agent), new Command.Pull(agentDir, boxDir));
 
