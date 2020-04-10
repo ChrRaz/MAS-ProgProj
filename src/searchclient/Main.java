@@ -177,6 +177,7 @@ public class Main {
 			for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
 				Position goalPos = goal.getKey();
 				Character goalType = goal.getValue();
+				String goalColor = initialState.color.get(goalType);
 
 				if (maSolution.get(maSolution.size() - 1).isGoalSatisfied(goalPos))
 					continue;
@@ -185,6 +186,10 @@ public class Main {
 					Position agentPos = agent.getKey();
 					char agentType = agent.getValue();
 					int agentId = Character.getNumericValue(agentType);
+					String agentColor = initialState.color.get(agentType);
+
+					if (!agentColor.equals(goalColor))
+						continue;
 
 					int moves = actionsPerformed[agentId];
 					MAState state = maSolution.get(moves);
