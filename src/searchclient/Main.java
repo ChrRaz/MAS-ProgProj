@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -173,6 +174,8 @@ public class Main {
 			List<MAState> fastestSASolution = null;
 			int fastestAgent = -1;
 
+			System.err.printf("Moves: %s\n", Arrays.toString(actionsPerformed));
+
 			// Find single agent-goal pair such that agent fills goal fastest
 			for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
 				Position goalPos = goal.getKey();
@@ -209,16 +212,37 @@ public class Main {
 
 			assert fastestSASolution != null;
 
-			maSolution = fastestSASolution;
+			System.err.printf("Fastest agent was (%d) with %d moves\n", fastestAgent, fastestSASolution.size() - 1);
+			// System.err.println(fastestSASolution.get(fastestSASolution.size() - 1));
+			System.err.println(fastestSASolution.stream().map(x -> (x.actions != null ? x.actions.toString() : "(None)")).collect(Collectors.joining(" ")));
+			System.err.println();
 
 			// Note how much the agent has moved
-			actionsPerformed[fastestAgent] += fastestSASolution.size() - 1;
+			actionsPerformed[fastestAgent] = fastestSASolution.size() - 1;
+
+			// Expand SA solution
+			while (fastestSASolution.size() < maSolution.size()) {
+				MAState lastState = fastestSASolution.get(fastestSASolution.size() - 1);
+				List<Command> actions = maSolution.get(lastState.g() + 1).actions;
+				fastestSASolution.add(new MAState(lastState, actions));
+			}
+
+			maSolution = fastestSASolution;
 
 		}
 
 		for (MAState state : maSolution) {
-			if (!state.isInitialState())
-				serverComm.send(state.actions);
+			if (!state.isInitialState()) {
+				List<Boolean> res = serverComm.send(state.actions);
+				for (Boolean ok : res) {
+					if (!ok) {
+						System.err.println("Illegal move!");
+						System.err.println(state.parent);
+						System.err.println(state);
+						break;
+					}
+				}
+			}
 		}
 	}
 }
