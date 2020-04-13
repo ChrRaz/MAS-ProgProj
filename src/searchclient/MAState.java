@@ -271,6 +271,8 @@ public class MAState {
 			if (command instanceof Command.Move) {
 				Position newAgentPos = agentPos.add(((Command.Move) command).getAgentDir());
 
+				assert this.cellIsFree(newAgentPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+
 				this.agents.remove(agentPos);
 				this.agents.put(newAgentPos, agentType);
 
@@ -278,6 +280,10 @@ public class MAState {
 				Position newAgentPos = agentPos.add(((Command.Push) command).getAgentDir());
 				Position boxPos = newAgentPos;
 				Position newBoxPos = boxPos.add(((Command.Push) command).getBoxDir());
+				String agentColor = this.color.get(agentType);
+
+				assert this.boxAt(newAgentPos, agentColor) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+				assert this.cellIsFree(newBoxPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
 
 				this.agents.remove(agentPos);
 				this.agents.put(newAgentPos, agentType);
@@ -289,6 +295,10 @@ public class MAState {
 				Position boxPos = agentPos.add(((Command.Pull) command).getBoxDir());
 				Position newAgentPos = agentPos.add(((Command.Pull) command).getAgentDir());
 				Position newBoxPos = agentPos;
+				String agentColor = this.color.get(agentType);
+
+				assert this.boxAt(boxPos, agentColor) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+				assert this.cellIsFree(newAgentPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
 
 				this.agents.remove(agentPos);
 				this.agents.put(newAgentPos, agentType);
