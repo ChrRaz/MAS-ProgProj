@@ -11,8 +11,10 @@ import java.util.List;
 
 public class Agent {
 
-	public static ArrayList<MAState> search(char agent, Position goalPos, MAState initialState, List<MAState> alreadyPlanned, Strategy strategy) {
+	public static ArrayList<MAState> search(char agent, Position goalPos, List<MAState> alreadyPlanned, Strategy strategy) {
 		System.err.format("Search starting with strategy %s.\n", strategy.toString());
+
+		MAState initialState = alreadyPlanned.get(0);
 		strategy.addToFrontier(initialState);
 
 		long iterations = 0;
