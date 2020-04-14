@@ -17,6 +17,8 @@ public class Agent {
 		MAState initialState = alreadyPlanned.get(0);
 		strategy.addToFrontier(initialState);
 
+		int origGoalCount = initialState.goalCount();
+
 		long iterations = 0;
 		while (true) {
 			if (strategy.frontierIsEmpty()) {
@@ -37,7 +39,7 @@ public class Agent {
 					strategy.describeState(leafState),
 					Memory.stringRep()));
 
-			if (leafState.isGoalSatisfied(goalPos)) {
+			if (leafState.isGoalSatisfied(goalPos) && leafState.goalCount() < origGoalCount) {
 				System.err.println(String.join("\t",
 					strategy.searchStatus(),
 					strategy.describeState(leafState),
