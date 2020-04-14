@@ -138,6 +138,54 @@ public class Main {
 		return initialState;
 	}
 
+	public static ArrayList<MAState> splitLevel(MAState initialState){
+
+		// Initialise distance map aka np.zeros :)
+		//List<List<Integer>> sectionIndex;
+		int[][] sectionIndex = new int[initialState.height][initialState.width];
+		/*
+		sectionIndex = new ArrayList<>(initialState.height);
+		for (int i = 0; i < initialState.height; i++) {
+			ArrayList<Integer> row = new ArrayList<>(initialState.width);
+
+			for (int j = 0; j < initialState.width; j++)
+				row.add(0);
+			sectionIndex.add(row);
+		}
+		*/
+		//Map<Position, Integer> usedGoals = new HashMap<>(); // :)
+
+		int goalIndex = 1;
+
+		for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
+			Position goalPosition = goal.getKey();
+
+			if (sectionIndex[goalPosition.getRow()][goalPosition.getCol()] == 0) // if goal is not already seen fill from this goal
+			{
+
+				ArrayDeque<Position> frontier = new ArrayDeque<>(Collections.singletonList(goalPosition));
+
+				while (!frontier.isEmpty()) {
+					Position p = frontier.pop();
+					int row = p.getRow(), col = p.getCol();
+
+					if (p.within(0, 0, initialState.height - 1, initialState.width - 1) &&
+							sectionIndex[row][col] == 0 && !initialState.walls.contains(p)) {
+
+						sectionIndex[row][col] = goalIndex; //:)
+
+						for (Command.Dir dir : Command.Dir.values()) {
+							frontier.add(p.add(dir));
+						}
+					}
+				}
+				goalIndex++;
+			}
+		}
+
+		return List<MAState>
+	}
+
 	public static void main(String[] args) throws IOException {
 		BufferedReader serverMessages = new BufferedReader(new InputStreamReader(System.in));
 
