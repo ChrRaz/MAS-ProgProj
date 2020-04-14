@@ -52,14 +52,13 @@ public class Agent {
 
 			// Need to identify agents by character rather than position
 			// as position changes across states.
-
-			boolean insideList = leafState.g() + 1 < alreadyPlanned.size();
+			boolean insideList = (leafState.g() + 1) < (alreadyPlanned.size() + initialState.g());
 			int numAgents = leafState.agents.size();
 
 			// TODO: Dynamically add NoOp states to fill alreadyPlanned enough to just index
 			MAState state;
 			if (insideList) {
-				List<Command> actions = alreadyPlanned.get(leafState.g() + 1).actions;
+				List<Command> actions = alreadyPlanned.get(leafState.g() + 1-initialState.g()).actions;
 				if (!leafState.isApplicable(actions))
 					continue;
 

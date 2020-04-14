@@ -182,8 +182,12 @@ public class Main {
 				Character goalType = goal.getValue();
 				String goalColor = initialState.color.get(goalType);
 
-				if (maSolution.get(maSolution.size() - 1).isGoalSatisfied(goalPos))
+				if (maSolution.get(maSolution.size() - 1).isGoalSatisfied(goalPos)) {
 					continue;
+				}
+				else {
+					System.err.printf(maSolution.get(maSolution.size() - 1).toString());
+				}
 
 				for (Map.Entry<Position, Character> agent : initialState.agents.entrySet()) {
 					Position agentPos = agent.getKey();
@@ -200,6 +204,11 @@ public class Main {
 					// TODO:
 					//  state is just the first state in the sublist
 					//  so it is redundant in Agent.search.
+					if (moves > 1){
+					 for (MAState i : maSolution.subList(moves, maSolution.size()) ) {
+						 System.err.printf(i.actions.toString());
+					}}
+
 					ArrayList<MAState> saSolution = Agent.search(agentType, goalPos, state, maSolution.subList(moves, maSolution.size()),
 						new Strategy.StrategyBestFirst(new Heuristic.AStar(state)));
 
