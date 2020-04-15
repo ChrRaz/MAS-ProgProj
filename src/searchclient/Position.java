@@ -12,6 +12,10 @@ public class Position implements Comparable<Position> {
 		this.col = col;
 	}
 
+	public static int distance(Position p1, Position p2) {
+		return Math.abs(p1.getRow() - p2.getRow()) + Math.abs(p1.getCol() - p2.getCol());
+	}
+
 	public int getRow() {
 		return this.row;
 	}

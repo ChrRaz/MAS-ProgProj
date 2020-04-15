@@ -9,11 +9,11 @@ import java.util.stream.Collectors;
 
 public abstract class Heuristic implements Comparator<MAState> {
     private final List<List<Map<Character, Integer>>> distToGoal;
+    private final HashSet<Character> chars = new HashSet<>();
 
     public Heuristic(MAState initialState) {
         // Here's a chance to pre-process the static parts of the level.
 
-        HashSet<Character> chars = new HashSet<>();
 
         // Initialise distance map
         this.distToGoal = new ArrayList<>(initialState.height);
@@ -29,7 +29,7 @@ public abstract class Heuristic implements Comparator<MAState> {
         for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
             Position pos = goal.getKey();
             char g = goal.getValue();
-            chars.add(g);
+            this.chars.add(g);
 
             ArrayDeque<Position> frontier = new ArrayDeque<>(Collections.singletonList(pos));
             ArrayDeque<Integer> dists = new ArrayDeque<>(Collections.singletonList(0));
@@ -54,7 +54,7 @@ public abstract class Heuristic implements Comparator<MAState> {
         }
 
         // Print the distance fields
-        for (Character c : chars) {
+        for (Character c : this.chars) {
             System.err.println(c);
             System.err.println(this.distToGoal.stream().map(
                     row -> row.stream().map(
@@ -74,6 +74,26 @@ public abstract class Heuristic implements Comparator<MAState> {
 
             totalDistance += this.distToGoal.get(boxPos.getRow()).get(boxPos.getCol()).getOrDefault(b, 0);
         }
+
+        int minAgentDist = Integer.MAX_VALUE;
+        for (Map.Entry<Position, Character> agent : n.agents.entrySet()) {
+            Position agentPos = agent.getKey();
+            Character agentType = agent.getValue();
+
+            for (Map.Entry<Position, Character> box : n.boxes.entrySet()) {
+                Position boxPos = box.getKey();
+                Character boxType = box.getValue();
+
+                if (this.chars.contains(boxType) && n.color.get(agentType).equals(n.color.get(boxType))) {
+                    int dist = Position.distance(agentPos, boxPos);
+
+                    if (dist < minAgentDist)
+                        minAgentDist = dist;
+                }
+            }
+        }
+
+        totalDistance += minAgentDist - 1;
 
         return totalDistance;
     }
