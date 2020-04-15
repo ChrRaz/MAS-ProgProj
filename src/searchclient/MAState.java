@@ -84,6 +84,14 @@ public class MAState {
 		return g.equals(a) || g.equals(b);
 	}
 
+	public int goalCount() {
+		int res = 0;
+		for (Position goalPos : this.goals.keySet())
+			if (!this.isGoalSatisfied(goalPos))
+				res++;
+		return res;
+	}
+
 	public ArrayList<MAState> getExpandedStates(char agent, MAState nextState) {
 		Position agentPos = this.getPositionOfAgent(agent);
 		String agentColor = this.color.get(agent);

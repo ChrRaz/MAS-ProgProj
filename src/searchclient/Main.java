@@ -239,15 +239,12 @@ public class Main {
 					int moves = actionsPerformed[agentId];
 					MAState state = maSolution.get(moves);
 
-					// TODO:
-					//  state is just the first state in the sublist
-					//  so it is redundant in Agent.search.
 					if (moves > 1){
 						for (MAState i : maSolution.subList(moves, maSolution.size()) ) {
 							System.err.printf(i.actions.toString());
 						}}
 
-					ArrayList<MAState> saSolution = Agent.search(agentType, goalPos, state, maSolution.subList(moves, maSolution.size()),
+					ArrayList<MAState> saSolution = Agent.search(agentType, goalPos, maSolution.subList(moves, maSolution.size()),
 							new Strategy.StrategyBestFirst(new Heuristic.AStar(state)));
 
 					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {

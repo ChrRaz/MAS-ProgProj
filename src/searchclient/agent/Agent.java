@@ -12,9 +12,13 @@ import java.util.Map;
 
 public class Agent {
 
-	public static ArrayList<MAState> search(char agent, Position goalPos, MAState initialState, List<MAState> alreadyPlanned, Strategy strategy) {
+	public static ArrayList<MAState> search(char agent, Position goalPos, List<MAState> alreadyPlanned, Strategy strategy) {
 		System.err.format("Search starting with strategy %s.\n", strategy.toString());
+
+		MAState initialState = alreadyPlanned.get(0);
 		strategy.addToFrontier(initialState);
+
+		int origGoalCount = initialState.goalCount();
 
 		long iterations = 0;
 		while (true) {
@@ -28,13 +32,15 @@ public class Agent {
 
 			MAState leafState = strategy.getAndRemoveLeaf();
 
+			int deltaG = leafState.g() - initialState.g();
+
 			if (iterations % 1000 == 0)
 				System.err.println(String.join("\t",
 					strategy.searchStatus(),
 					strategy.describeState(leafState),
 					Memory.stringRep()));
 
-			if (leafState.isGoalSatisfied(goalPos)) {
+			if (leafState.isGoalSatisfied(goalPos) && leafState.goalCount() < origGoalCount) {
 				System.err.println(String.join("\t",
 					strategy.searchStatus(),
 					strategy.describeState(leafState),
@@ -53,13 +59,13 @@ public class Agent {
 
 			// Need to identify agents by character rather than position
 			// as position changes across states.
-			boolean insideList = (leafState.g() + 1) < (alreadyPlanned.size() + initialState.g());
+			boolean insideList = (deltaG + 1) < (alreadyPlanned.size());
 			int numAgents = leafState.numAgents;
 
 			// TODO: Dynamically add NoOp states to fill alreadyPlanned enough to just index
 			MAState state;
 			if (insideList) {
-				List<Command> actions = alreadyPlanned.get(leafState.g() + 1-initialState.g()).actions;
+				List<Command> actions = alreadyPlanned.get(deltaG + 1).actions;
 				if (!leafState.isApplicable(actions))
 					continue;
 
