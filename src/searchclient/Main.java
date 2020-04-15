@@ -135,44 +135,52 @@ public class Main {
 
 		// TODO: Convert boxes with no agents to walls
 
+		initialState.numAgents = initialState.agents.size();
 		return initialState;
 	}
 
-	public static ArrayList<MAState> splitLevel(MAState initialState){
+	public static List<MAState> splitLevel(MAState initialState){ // :)
 
 		// Initialise distance map aka np.zeros :)
-		//List<List<Integer>> sectionIndex;
 		int[][] sectionIndex = new int[initialState.height][initialState.width];
-		/*
-		sectionIndex = new ArrayList<>(initialState.height);
-		for (int i = 0; i < initialState.height; i++) {
-			ArrayList<Integer> row = new ArrayList<>(initialState.width);
-
-			for (int j = 0; j < initialState.width; j++)
-				row.add(0);
-			sectionIndex.add(row);
-		}
-		*/
-		//Map<Position, Integer> usedGoals = new HashMap<>(); // :)
 
 		int goalIndex = 1;
+		int height = initialState.height, width = initialState.width;
+		String domain = initialState.domain;
 
+		List<MAState> subLevels = new ArrayList<>();
 		for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
 			Position goalPosition = goal.getKey();
 
 			if (sectionIndex[goalPosition.getRow()][goalPosition.getCol()] == 0) // if goal is not already seen fill from this goal
 			{
 
+				MAState newState = new MAState(width, height, domain);
+				newState.numAgents = initialState.numAgents;
+				newState.color.putAll(initialState.color);
 				ArrayDeque<Position> frontier = new ArrayDeque<>(Collections.singletonList(goalPosition));
 
 				while (!frontier.isEmpty()) {
 					Position p = frontier.pop();
 					int row = p.getRow(), col = p.getCol();
 
-					if (p.within(0, 0, initialState.height - 1, initialState.width - 1) &&
-							sectionIndex[row][col] == 0 && !initialState.walls.contains(p)) {
+					if (initialState.walls.contains(p)) {
+						newState.walls.add(p);
+						continue; // pls continue while loop
+					}
 
-						sectionIndex[row][col] = goalIndex; //:)
+					if (sectionIndex[row][col] == 0) {
+						sectionIndex[row][col] = goalIndex; // :)
+
+						if (initialState.goals.containsKey(p)) {
+							newState.goals.put(p, initialState.goals.get(p));
+						}
+						if (initialState.boxes.containsKey(p)) {
+							newState.boxes.put(p, initialState.boxes.get(p));
+						}
+						if (initialState.agents.containsKey(p)) {
+							newState.agents.put(p, initialState.agents.get(p));
+						}
 
 						for (Command.Dir dir : Command.Dir.values()) {
 							frontier.add(p.add(dir));
@@ -180,34 +188,15 @@ public class Main {
 					}
 				}
 				goalIndex++;
+				subLevels.add(newState);
+
 			}
 		}
 
-		return List<MAState>
+		return subLevels;
 	}
 
-	public static void main(String[] args) throws IOException {
-		BufferedReader serverMessages = new BufferedReader(new InputStreamReader(System.in));
-
-		// Identify ourselves
-		System.out.println("Meme-o-tron 2000");
-
-		// Test that we can solve a singe-agent level
-		MAState initialState = parseLevel(serverMessages);
-		System.err.println(initialState);
-
-		Communicator serverComm = new Communicator(serverMessages, System.out);
-
-		// Construct initial MA solution consisting only of the initial state
-		// while !isGoalState
-		//   Choose single agent-goal pair such that agent fills goal fastest
-		//     - Filter out the part of alreadyplanned that happens before the agent can move
-		//     - Construct SA initial state with only relevant items
-		//     - Later: Solve assignment of all agents to goals
-		//   Update MA state
-		//     Copy box and agent
-		//
-
+	public static List<MAState> maSolve(MAState initialState) { // :)
 		int numAgents = initialState.agents.size();
 
 		List<MAState> maSolution = new ArrayList<>(Collections.singletonList(initialState));
@@ -221,6 +210,7 @@ public class Main {
 
 			List<MAState> fastestSASolution = null;
 			int fastestAgent = -1;
+
 
 			System.err.printf("Moves: %s\n", Arrays.toString(actionsPerformed));
 
@@ -253,12 +243,12 @@ public class Main {
 					//  state is just the first state in the sublist
 					//  so it is redundant in Agent.search.
 					if (moves > 1){
-					 for (MAState i : maSolution.subList(moves, maSolution.size()) ) {
-						 System.err.printf(i.actions.toString());
-					}}
+						for (MAState i : maSolution.subList(moves, maSolution.size()) ) {
+							System.err.printf(i.actions.toString());
+						}}
 
 					ArrayList<MAState> saSolution = Agent.search(agentType, goalPos, state, maSolution.subList(moves, maSolution.size()),
-						new Strategy.StrategyBestFirst(new Heuristic.AStar(state)));
+							new Strategy.StrategyBestFirst(new Heuristic.AStar(state)));
 
 					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
 						fastestSASolution = saSolution;
@@ -287,6 +277,91 @@ public class Main {
 			maSolution = fastestSASolution;
 
 		}
+		return maSolution;
+	}
+
+	public static List<MAState> mergeSolutions(List<MAState> solution1, List<MAState> solution2) {
+
+		MAState initial = solution1.get(0);
+		List<MAState> mergedSolutionStates = new ArrayList<>(Collections.singletonList(initial)); // yolo
+
+		if (solution2.size() > solution1.size()) {
+			List<MAState> tmp = solution1;
+			solution1 = solution2;
+			solution2 = tmp;
+		}
+
+		Iterator<MAState> it1 = solution1.iterator();
+		Iterator<MAState> it2 = solution2.iterator();
+
+		it1.next();
+		it2.next(); // lul iterate first to remove initial state
+
+		while (it1.hasNext() && it2.hasNext()) {
+			MAState s1 = it1.next();
+			MAState s2 = it2.next();
+			List<Command> newActions = new ArrayList<>(s1.actions);
+
+			for (Character agent : s2.agents.values()) {
+				int i = Character.getNumericValue(agent);
+				newActions.set(i, s2.actions.get(i));
+
+			}
+			MAState parent = mergedSolutionStates.get(mergedSolutionStates.size() - 1);
+			mergedSolutionStates.add(new MAState(parent, newActions));
+		}
+
+		while (it1.hasNext()) {
+			MAState s1 = it1.next();
+			MAState parent = mergedSolutionStates.get(mergedSolutionStates.size() - 1);
+			mergedSolutionStates.add(new MAState(parent, s1.actions));
+		}
+
+		return mergedSolutionStates;
+	}
+	public static void main(String[] args) throws IOException {
+		BufferedReader serverMessages = new BufferedReader(new InputStreamReader(System.in));
+
+		// Identify ourselves
+		System.out.println("Meme-o-tron 2000 :)");
+
+		// Test that we can solve a singe-agent level
+		MAState initialState = parseLevel(serverMessages);
+		System.err.println(initialState);
+
+		Communicator serverComm = new Communicator(serverMessages, System.out);
+
+		// Construct initial MA solution consisting only of the initial state
+		// while !isGoalState
+		//   Choose single agent-goal pair such that agent fills goal fastest
+		//     - Filter out the part of alreadyplanned that happens before the agent can move
+		//     - Construct SA initial state with only relevant items
+		//     - Later: Solve assignment of all agents to goals
+		//   Update MA state
+		//     Copy box and agent
+		//
+
+
+		List<MAState> subLevels = splitLevel(initialState);
+		List<MAState> maSolution = new ArrayList<>(Collections.singleton(initialState));
+
+		for (MAState subLevel : subLevels) {
+			System.err.println(subLevel);
+			List<MAState> subSolution;
+
+			if (subLevel.isSAState()){
+				Strategy.StrategyBestFirst strategy = new Strategy.StrategyBestFirst(new Heuristic.AStar(subLevel));
+				subSolution = Agent.saSearch(subLevel, strategy);
+			}
+			else {
+				subSolution = maSolve(subLevel);
+			}
+			System.err.println(maSolution);
+			System.err.println(subSolution);
+			assert subSolution != null;
+			maSolution = mergeSolutions(maSolution,subSolution);
+		}
+
 
 		for (MAState state : maSolution) {
 			if (!state.isInitialState()) {

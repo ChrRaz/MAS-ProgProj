@@ -5,6 +5,7 @@ import java.util.*;
 public class MAState {
 	private static final Random RNG = new Random(1);
 
+	public int numAgents;
 	public int height, width;
 	public final String domain;
 
@@ -42,6 +43,7 @@ public class MAState {
 		this.goals = parent.goals;
 		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
+		this.numAgents = parent.numAgents;
 
 		this.applyActions(actions);
 	}
@@ -308,6 +310,10 @@ public class MAState {
 
 			}
 		}
+	}
+
+	public boolean isSAState() {
+		return this.agents.size() == 1;
 	}
 
 	@Override
