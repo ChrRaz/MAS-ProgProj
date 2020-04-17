@@ -197,7 +197,7 @@ public class Main {
 	}
 
 	public static List<MAState> maSolve(MAState initialState) { // :)
-		int numAgents = initialState.agents.size();
+		int numAgents = initialState.numAgents;
 
 		List<MAState> maSolution = new ArrayList<>(Collections.singletonList(initialState));
 
