@@ -1,6 +1,7 @@
 package searchclient;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MAState {
 	private static final Random RNG = new Random(1);
@@ -322,6 +323,21 @@ public class MAState {
 
 	public boolean isSAState() {
 		return this.agents.size() == 1;
+	}
+
+	public void wallifyBoxes() {
+		Set<String> agentColors = this.color.entrySet().stream().filter(entry -> Character.isDigit(entry.getKey())).map(Map.Entry::getValue).collect(Collectors.toSet());
+		TreeMap<Position, Character> boxes = new TreeMap<>(this.boxes);
+
+		for (Map.Entry<Position, Character> box : boxes.entrySet()) {
+			Position boxPos = box.getKey();
+			Character boxType = box.getValue();
+
+			if (!agentColors.contains(this.color.get(boxType))) {
+				this.boxes.remove(boxPos);
+				this.walls.add(boxPos);
+			}
+		}
 	}
 
 	@Override

@@ -141,6 +141,8 @@ public class Main {
 
 	public static List<MAState> splitLevel(MAState initialState){ // :)
 
+		initialState.wallifyBoxes();
+
 		// Initialise distance map aka np.zeros :)
 		int[][] sectionIndex = new int[initialState.height][initialState.width];
 
@@ -193,7 +195,17 @@ public class Main {
 			}
 		}
 
-		return subLevels;
+		List<MAState> result;
+
+		if (subLevels.size() == 1)
+			result = subLevels;
+		else {
+			result = new ArrayList<>();
+			for (MAState subLevel : subLevels)
+				result.addAll(splitLevel(subLevel));
+		}
+
+		return result;
 	}
 
 	public static List<MAState> maSolve(MAState initialState) { // :)
