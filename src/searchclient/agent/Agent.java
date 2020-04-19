@@ -2,23 +2,21 @@ package searchclient.agent;
 
 import searchclient.Command;
 import searchclient.MAState;
-import searchclient.Position;
 import searchclient.util.Memory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class Agent {
 
-	public static ArrayList<MAState> search(char agent, Position goalPos, List<MAState> alreadyPlanned, Strategy strategy) {
-		System.err.format("Search starting with strategy %s.\n", strategy.toString());
-
+	public static ArrayList<MAState> search(char agent, List<MAState> alreadyPlanned, Strategy strategy) {
 		MAState initialState = alreadyPlanned.get(0);
 		strategy.addToFrontier(initialState);
 
-		int origGoalCount = initialState.goalCount();
+		int origGoalCount = alreadyPlanned.get(alreadyPlanned.size() - 1).goalCount();
+
+		System.err.format("Search starting (%c) with %d goals using strategy %s.\n", agent, origGoalCount, strategy.toString());
 
 		long iterations = 0;
 		while (true) {
@@ -26,6 +24,7 @@ public class Agent {
 				System.err.println(String.join("\t",
 					strategy.searchStatus(),
 					Memory.stringRep()));
+				System.err.println("Search failed :(");
 
 				return null;
 			}
@@ -34,19 +33,35 @@ public class Agent {
 
 			int deltaG = leafState.g() - initialState.g();
 
-			if (iterations % 1000 == 0)
+			if (iterations % 10_000 == 0)
 				System.err.println(String.join("\t",
 					strategy.searchStatus(),
 					strategy.describeState(leafState),
 					Memory.stringRep()));
 
-			if (leafState.isGoalSatisfied(goalPos) && leafState.goalCount() < origGoalCount) {
-				System.err.println(String.join("\t",
-					strategy.searchStatus(),
-					strategy.describeState(leafState),
-					Memory.stringRep()));
+			if (!leafState.isInitialState() && leafState.agentAchievedGoal(agent)) {
+				MAState endState = leafState;
 
-				return leafState.extractPlanWithInitial();
+				boolean isApplicable = true;
+				for (MAState state : alreadyPlanned.subList(Math.min(deltaG + 1, alreadyPlanned.size()), alreadyPlanned.size())) {
+					if (!endState.isApplicable(state.actions)) {
+						isApplicable = false;
+						break;
+					}
+					endState = new MAState(endState, state.actions);
+				}
+
+				if (isApplicable && endState.goalCount() < origGoalCount) {
+					ArrayList<MAState> plan = leafState.extractPlanWithInitial();
+
+					System.err.println(String.join("\t",
+						strategy.searchStatus(),
+						strategy.describeState(leafState),
+						Memory.stringRep()));
+					System.err.printf("Found solution of length %d\n", plan.size() - 1);
+
+					return plan;
+				}
 			}
 
 			// Pick out state based on leafState.g() and alreadyPlanned list.
@@ -62,7 +77,6 @@ public class Agent {
 			boolean insideList = (deltaG + 1) < (alreadyPlanned.size());
 			int numAgents = leafState.numAgents;
 
-			// TODO: Dynamically add NoOp states to fill alreadyPlanned enough to just index
 			MAState state;
 			if (insideList) {
 				List<Command> actions = alreadyPlanned.get(deltaG + 1).actions;

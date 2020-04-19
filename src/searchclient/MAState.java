@@ -93,6 +93,51 @@ public class MAState {
 		return res;
 	}
 
+	public int goalCount(String color) {
+		int res = 0;
+		for (Map.Entry<Position, Character> goal : this.goals.entrySet()) {
+			Position goalPos = goal.getKey();
+			Character goalType = goal.getValue();
+			String goalColor = this.color.get(goalType);
+
+			if (goalColor.equals(color) && !this.isGoalSatisfied(goalPos))
+				res++;
+		}
+		return res;
+	}
+
+	public boolean agentAchievedGoal(char agent) {
+		int agentId = Character.getNumericValue(agent);
+		Position agentPos = this.getPositionOfAgent(agent);
+		Command action = this.actions.get(agentId);
+
+		if (action instanceof Command.Move) {
+			if (this.goals.containsKey(agentPos) && this.isGoalSatisfied(agentPos))
+				return true;
+
+		} else if (action instanceof Command.Push) {
+			Command.Push pushCommand = (Command.Push) action;
+
+			if (this.goals.containsKey(agentPos) && this.isGoalSatisfied(agentPos))
+				return true;
+
+			Position boxPos = agentPos.add(pushCommand.getBoxDir());
+			if (this.goals.containsKey(boxPos) && this.isGoalSatisfied(boxPos)) {
+				return true;
+			}
+		} else if (action instanceof Command.Pull) {
+			if (this.goals.containsKey(agentPos) && this.isGoalSatisfied(agentPos))
+				return true;
+
+			Position boxPos = this.parent.getPositionOfAgent(agent);
+			if (this.goals.containsKey(boxPos) && this.isGoalSatisfied(boxPos)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public ArrayList<MAState> getExpandedStates(char agent, MAState nextState) {
 		Position agentPos = this.getPositionOfAgent(agent);
 		String agentColor = this.color.get(agent);

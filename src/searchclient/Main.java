@@ -227,44 +227,28 @@ public class Main {
 			System.err.printf("Moves: %s\n", Arrays.toString(actionsPerformed));
 
 			// Find single agent-goal pair such that agent fills goal fastest
-			for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
-				Position goalPos = goal.getKey();
-				Character goalType = goal.getValue();
-				String goalColor = initialState.color.get(goalType);
+			for (Map.Entry<Position, Character> agent : initialState.agents.entrySet()) {
+				Position agentPos = agent.getKey();
+				char agentType = agent.getValue();
+				int agentId = Character.getNumericValue(agentType);
+				String agentColor = initialState.color.get(agentType);
 
-				if (maSolution.get(maSolution.size() - 1).isGoalSatisfied(goalPos)) {
+				if (maSolution.get(maSolution.size() - 1).goalCount(agentColor) == 0)
 					continue;
-				}
-				else {
-					System.err.printf(maSolution.get(maSolution.size() - 1).toString());
-				}
 
-				for (Map.Entry<Position, Character> agent : initialState.agents.entrySet()) {
-					Position agentPos = agent.getKey();
-					char agentType = agent.getValue();
-					int agentId = Character.getNumericValue(agentType);
-					String agentColor = initialState.color.get(agentType);
 
-					if (!agentColor.equals(goalColor))
-						continue;
+				int moves = actionsPerformed[agentId];
+				MAState state = maSolution.get(moves);
 
-					int moves = actionsPerformed[agentId];
-					MAState state = maSolution.get(moves);
+				ArrayList<MAState> saSolution = Agent.search(agentType, maSolution.subList(moves, maSolution.size()),
+					new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)));
 
-					if (moves > 1){
-						for (MAState i : maSolution.subList(moves, maSolution.size()) ) {
-							System.err.printf(i.actions.toString());
-						}}
-
-					ArrayList<MAState> saSolution = Agent.search(agentType, goalPos, maSolution.subList(moves, maSolution.size()),
-							new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)));
-
-					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
-						fastestSASolution = saSolution;
-						fastestAgent = agentId;
-					}
+				if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
+					fastestSASolution = saSolution;
+					fastestAgent = agentId;
 				}
 			}
+
 
 			assert fastestSASolution != null;
 
@@ -284,6 +268,7 @@ public class Main {
 			}
 
 			maSolution = fastestSASolution;
+			System.err.println(maSolution.get(maSolution.size() - 1));
 
 		}
 		return maSolution;
@@ -291,14 +276,14 @@ public class Main {
 
 	public static List<MAState> mergeSolutions(List<MAState> solution1, List<MAState> solution2) {
 
-		MAState initial = solution1.get(0);
-		List<MAState> mergedSolutionStates = new ArrayList<>(Collections.singletonList(initial)); // yolo
-
 		if (solution2.size() > solution1.size()) {
 			List<MAState> tmp = solution1;
 			solution1 = solution2;
 			solution2 = tmp;
 		}
+
+		MAState initial = solution1.get(0);
+		List<MAState> mergedSolutionStates = new ArrayList<>(Collections.singletonList(initial)); // yolo
 
 		Iterator<MAState> it1 = solution1.iterator();
 		Iterator<MAState> it2 = solution2.iterator();
@@ -353,6 +338,8 @@ public class Main {
 
 		List<MAState> subLevels = splitLevel(initialState);
 		List<MAState> maSolution = new ArrayList<>(Collections.singleton(initialState));
+
+		initialState.agents.clear(); // yolo
 
 		for (MAState subLevel : subLevels) {
 			System.err.println(subLevel);
