@@ -10,10 +10,12 @@ import java.util.stream.Collectors;
 public abstract class Heuristic implements Comparator<MAState> {
     private final List<List<Map<Character, Integer>>> distToGoal;
     private final HashSet<Character> chars = new HashSet<>();
+    private final String color;
 
-    public Heuristic(MAState initialState) {
+    public Heuristic(MAState initialState, String color) {
         // Here's a chance to pre-process the static parts of the level.
 
+        this.color = color;
 
         // Initialise distance map
         this.distToGoal = new ArrayList<>(initialState.height);
@@ -71,8 +73,10 @@ public abstract class Heuristic implements Comparator<MAState> {
         for (Map.Entry<Position, Character> entry : n.boxes.entrySet()) {
             Position boxPos = entry.getKey();
             Character b = entry.getValue();
+            if(this.color != null && this.color.equals(n.color.get(b))){
+                totalDistance += this.distToGoal.get(boxPos.getRow()).get(boxPos.getCol()).getOrDefault(b, 0);
+            }
 
-            totalDistance += this.distToGoal.get(boxPos.getRow()).get(boxPos.getCol()).getOrDefault(b, 0);
         }
 
         int minAgentDist = Integer.MAX_VALUE;
@@ -106,8 +110,8 @@ public abstract class Heuristic implements Comparator<MAState> {
     }
 
     public static class AStar extends Heuristic {
-        public AStar(MAState initialState) {
-            super(initialState);
+        public AStar(MAState initialState, String color) {
+            super(initialState,color);
         }
 
         @Override
@@ -124,8 +128,8 @@ public abstract class Heuristic implements Comparator<MAState> {
     public static class WeightedAStar extends Heuristic {
         private int W;
 
-        public WeightedAStar(MAState initialState, int W) {
-            super(initialState);
+        public WeightedAStar(MAState initialState, String color, int W) {
+            super(initialState, color);
             this.W = W;
         }
 
@@ -141,8 +145,8 @@ public abstract class Heuristic implements Comparator<MAState> {
     }
 
     public static class Greedy extends Heuristic {
-        public Greedy(MAState initialState) {
-            super(initialState);
+        public Greedy(MAState initialState, String color) {
+            super(initialState, color);
         }
 
         @Override

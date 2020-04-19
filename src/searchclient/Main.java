@@ -257,7 +257,7 @@ public class Main {
 						}}
 
 					ArrayList<MAState> saSolution = Agent.search(agentType, goalPos, maSolution.subList(moves, maSolution.size()),
-							new Strategy.StrategyBestFirst(new Heuristic.AStar(state)));
+							new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)));
 
 					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
 						fastestSASolution = saSolution;
@@ -359,7 +359,9 @@ public class Main {
 			List<MAState> subSolution;
 
 			if (subLevel.isSAState()){
-				Strategy.StrategyBestFirst strategy = new Strategy.StrategyBestFirst(new Heuristic.AStar(subLevel));
+				Character agentType = initialState.agents.values().iterator().next();
+				String agentColor = initialState.color.get(agentType);
+				Strategy.StrategyBestFirst strategy = new Strategy.StrategyBestFirst(new Heuristic.AStar(subLevel,agentColor));
 				subSolution = Agent.saSearch(subLevel, strategy);
 			}
 			else {
