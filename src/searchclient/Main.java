@@ -274,45 +274,43 @@ public class Main {
 		return maSolution;
 	}
 
-	public static List<MAState> mergeSolutions(List<MAState> solution1, List<MAState> solution2) {
+	public static List<List<Command>> mergeSolutions(List<List<Command>> solution1, List<List<Command>> solution2) {
 
 		if (solution2.size() > solution1.size()) {
-			List<MAState> tmp = solution1;
+			List<List<Command>> tmp = solution1;
 			solution1 = solution2;
 			solution2 = tmp;
 		}
 
-		MAState initial = solution1.get(0);
-		List<MAState> mergedSolutionStates = new ArrayList<>(Collections.singletonList(initial)); // yolo
+		List<Command> initial = solution1.get(0);
+		List<List<Command>> mergedSolutionStates = new ArrayList<>(Collections.singletonList(initial)); // yolo
 
-		Iterator<MAState> it1 = solution1.iterator();
-		Iterator<MAState> it2 = solution2.iterator();
+		Iterator<List<Command>> it1 = solution1.iterator();
+		Iterator<List<Command>> it2 = solution2.iterator();
 
 		it1.next();
 		it2.next(); // lul iterate first to remove initial state
 
 		while (it1.hasNext() && it2.hasNext()) {
-			MAState s1 = it1.next();
-			MAState s2 = it2.next();
-			List<Command> newActions = new ArrayList<>(s1.actions);
+			List<Command> s1 = it1.next();
+			List<Command> s2 = it2.next();
+			List<Command> newActions = new ArrayList<>(s1);
 
-			for (Character agent : s2.agents.values()) {
-				int i = Character.getNumericValue(agent);
-				newActions.set(i, s2.actions.get(i));
-
+			for (int i = 0; i < s2.size(); i++) {
+				if (!(s2.get(i) instanceof Command.NoOp))
+					newActions.set(i, s2.get(i));
 			}
-			MAState parent = mergedSolutionStates.get(mergedSolutionStates.size() - 1);
-			mergedSolutionStates.add(new MAState(parent, newActions));
+
+			mergedSolutionStates.add(newActions);
 		}
 
 		while (it1.hasNext()) {
-			MAState s1 = it1.next();
-			MAState parent = mergedSolutionStates.get(mergedSolutionStates.size() - 1);
-			mergedSolutionStates.add(new MAState(parent, s1.actions));
+			mergedSolutionStates.add(it1.next());
 		}
 
 		return mergedSolutionStates;
 	}
+
 	public static void main(String[] args) throws IOException {
 		BufferedReader serverMessages = new BufferedReader(new InputStreamReader(System.in));
 
@@ -337,9 +335,7 @@ public class Main {
 
 
 		List<MAState> subLevels = splitLevel(initialState);
-		List<MAState> maSolution = new ArrayList<>(Collections.singleton(initialState));
-
-		initialState.agents.clear(); // yolo
+		List<List<Command>> maSolution = new ArrayList<>(Collections.singletonList(Collections.nCopies(initialState.numAgents, new Command.NoOp())));
 
 		for (MAState subLevel : subLevels) {
 			System.err.println(subLevel);
@@ -357,20 +353,18 @@ public class Main {
 			System.err.println(maSolution);
 			System.err.println(subSolution);
 			assert subSolution != null;
-			maSolution = mergeSolutions(maSolution,subSolution);
+
+			List<List<Command>> solutionActions = subSolution.stream().map(x -> x.actions).collect(Collectors.toList());
+			maSolution = mergeSolutions(maSolution, solutionActions);
 		}
 
 
-		for (MAState state : maSolution) {
-			if (!state.isInitialState()) {
-				List<Boolean> res = serverComm.send(state.actions);
-				for (Boolean ok : res) {
-					if (!ok) {
-						System.err.println("Illegal move!");
-						System.err.println(state.parent);
-						System.err.println(state);
-						break;
-					}
+		for (List<Command> actions : maSolution.subList(1, maSolution.size())) {
+			List<Boolean> res = serverComm.send(actions);
+			for (Boolean ok : res) {
+				if (!ok) {
+					System.err.printf("Illegal move: %s", actions);
+					break;
 				}
 			}
 		}
