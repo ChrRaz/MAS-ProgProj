@@ -70,10 +70,20 @@ public abstract class Heuristic implements Comparator<MAState> {
     public int h(MAState n) {
         int totalDistance = 0;
 
+        for (Map.Entry<Position, Character> entry : n.agents.entrySet()) {
+            Position agentPos = entry.getKey();
+            Character a = entry.getValue();
+
+	        if (this.color.equals(n.color.get(a))) {
+                totalDistance += this.distToGoal.get(agentPos.getRow()).get(agentPos.getCol()).getOrDefault(a, 0);
+            }
+
+        }
+
         for (Map.Entry<Position, Character> entry : n.boxes.entrySet()) {
             Position boxPos = entry.getKey();
             Character b = entry.getValue();
-            if(this.color != null && this.color.equals(n.color.get(b))){
+            if (this.color.equals(n.color.get(b))) {
                 totalDistance += this.distToGoal.get(boxPos.getRow()).get(boxPos.getCol()).getOrDefault(b, 0);
             }
 
@@ -84,11 +94,17 @@ public abstract class Heuristic implements Comparator<MAState> {
             Position agentPos = agent.getKey();
             Character agentType = agent.getValue();
 
+            if (!this.color.equals(n.color.get(agentType)))
+                continue;
+
             for (Map.Entry<Position, Character> box : n.boxes.entrySet()) {
                 Position boxPos = box.getKey();
                 Character boxType = box.getValue();
 
-                if (this.chars.contains(boxType) && n.color.get(agentType).equals(n.color.get(boxType))) {
+	            if (!this.color.equals(n.color.get(boxType)))
+		            continue;
+
+	            if (this.chars.contains(boxType) && n.color.get(agentType).equals(n.color.get(boxType))) {
                     int dist = Position.distance(agentPos, boxPos);
 
                     if (dist < minAgentDist)
