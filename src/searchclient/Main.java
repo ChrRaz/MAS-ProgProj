@@ -346,7 +346,7 @@ public class Main {
 			List<MAState> subSolution;
 
 			if (subLevel.isSAState()){
-				Character agentType = initialState.agents.values().iterator().next();
+				Character agentType = subLevel.agents.values().iterator().next();
 				String agentColor = initialState.color.get(agentType);
 				Strategy.StrategyBestFirst strategy = new Strategy.StrategyBestFirst(new Heuristic.AStar(subLevel,agentColor));
 				subSolution = Agent.saSearch(subLevel, strategy);
