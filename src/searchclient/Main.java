@@ -274,6 +274,80 @@ public class Main {
 		return maSolution;
 	}
 
+	public static List<MAState> maSolveIgnore(MAState initialState) {
+		int numAgents = initialState.numAgents;
+
+		List<MAState> maSolution = new ArrayList<>(Collections.singletonList(initialState));
+
+		// Keep track of how many actions each agent has already performed
+		int[] actionsPerformed = new int[numAgents];
+		// All agents have initially performed 0 actions
+		Arrays.fill(actionsPerformed, 0);
+
+		while (!maSolution.get(maSolution.size() - 1).isGoalState()) {
+
+			List<MAState> fastestSASolution = null;
+			int fastestAgent = -1;
+
+
+			System.err.printf("Moves: %s\n", Arrays.toString(actionsPerformed));
+
+			for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
+				Position goalPos = goal.getKey();
+				Character goalType = goal.getValue();
+
+				// Find single agent-goal pair such that agent fills goal fastest
+				for (Map.Entry<Position, Character> agent : initialState.agents.entrySet()) {
+					Position agentPos = agent.getKey();
+					char agentType = agent.getValue();
+
+					if (initialState.color.get(agentType).equals(initialState.color.get(goalType))){
+						continue;
+					}
+
+					int agentId = Character.getNumericValue(agentType);
+					String agentColor = initialState.color.get(agentType);
+
+					if (maSolution.get(maSolution.size() - 1).goalCount(agentColor) == 0)
+						continue;
+
+					int moves = actionsPerformed[agentId];
+					MAState state = maSolution.get(moves);
+
+					ArrayList<MAState> saSolution = Agent.searchIgnore(agentType, maSolution,
+							new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), goalPos, actionsPerformed);
+
+					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
+						fastestSASolution = saSolution;
+						fastestAgent = agentId;
+					}
+				}
+			}
+
+			assert fastestSASolution != null;
+
+			System.err.printf("Fastest agent was (%d) with %d moves\n", fastestAgent, fastestSASolution.size() - 1);
+			// System.err.println(fastestSASolution.get(fastestSASolution.size() - 1));
+			System.err.println(fastestSASolution.stream().map(x -> (x.actions != null ? x.actions.toString() : "(None)")).collect(Collectors.joining(" ")));
+			System.err.println();
+
+			// Note how much the agent has moved
+			actionsPerformed[fastestAgent] = fastestSASolution.size() - 1;
+
+			// Expand SA solution
+			while (fastestSASolution.size() < maSolution.size()) {
+				MAState lastState = fastestSASolution.get(fastestSASolution.size() - 1);
+				List<Command> actions = maSolution.get(lastState.g() + 1).actions;
+				fastestSASolution.add(new MAState(lastState, actions));
+			}
+
+			maSolution = fastestSASolution;
+			System.err.println(maSolution.get(maSolution.size() - 1));
+
+		}
+		return maSolution;
+	}
+
 	public static List<List<Command>> mergeSolutions(List<List<Command>> solution1, List<List<Command>> solution2) {
 
 		if (solution2.size() > solution1.size()) {

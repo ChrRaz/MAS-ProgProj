@@ -23,12 +23,15 @@ public class MAState {
 	public final Set<Position> walls;
 	public final TreeMap<Position, Character> boxes;
 	public final Map<Position, Character> goals;
+	public Map<Position, Character> fakeGoals;
 
 	public final TreeMap<Position, Character> agents;
 	public final Map<Character, String> color;
 
 	public MAState parent;
 	public final List<Command> actions;
+
+	public Set<Position> path;
 
 	private int g;
 
@@ -42,10 +45,11 @@ public class MAState {
 		this.walls = parent.walls;
 		this.boxes = new TreeMap<>(parent.boxes);
 		this.goals = parent.goals;
+		this.fakeGoals = parent.fakeGoals;
 		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
 		this.numAgents = parent.numAgents;
-
+		this.path = parent.path;
 		this.applyActions(actions);
 	}
 
@@ -59,8 +63,27 @@ public class MAState {
 		this.walls = new HashSet<>();
 		this.boxes = new TreeMap<>();
 		this.goals = new HashMap<>();
+		this.fakeGoals = new HashMap<>();
 		this.agents = new TreeMap<>();
 		this.color = new HashMap<>();
+		this.path = new HashSet<>();
+	}
+
+	public MAState(MAState parent) {
+		this.actions = parent.actions;
+		this.domain = parent.domain;
+		this.parent = parent;
+		this.g = parent.g() + 1;
+		this.height = parent.height;
+		this.width = parent.width;
+		this.walls = parent.walls;
+		this.boxes = new TreeMap<>(parent.boxes);
+		this.goals = parent.goals;
+		this.fakeGoals = parent.fakeGoals;
+		this.agents = new TreeMap<>(parent.agents);
+		this.color = parent.color;
+		this.numAgents = parent.numAgents;
+		this.path = parent.path;
 	}
 
 	public int g() {
@@ -239,9 +262,93 @@ public class MAState {
 		throw new RuntimeException("Agent not found: " + agent);
 	}
 
+
+	public ArrayList<MAState> getExpandedStatesIgnore(char agent) {
+		Position agentPos = this.getPositionOfAgent(agent);
+		String agentColor = this.color.get(agent);
+
+		ArrayList<MAState> expandedStates = new ArrayList<>();
+
+		// Move
+		for (Command.Dir agentDir : Command.Dir.values()) {
+			Position newAgentPos = agentPos.add(agentDir);
+
+			if (this.cellIsFreeIgnore(newAgentPos)) {
+				ArrayList<Command> otherCommands = new ArrayList<>(this.actions);
+				otherCommands.set(Character.getNumericValue(agent), new Command.Move(agentDir));
+
+				MAState newState = new MAState(this, otherCommands);
+				newState.path.add(newAgentPos);
+
+				expandedStates.add(newState);
+			}
+		}
+
+		// Push
+		for (Command.Dir agentDir : Command.Dir.values()) {
+			Position newAgentPos = agentPos.add(agentDir);
+
+			// Make sure that there's actually a box to move
+			if (this.boxAt(newAgentPos, agentColor)) {
+				Position boxPos = newAgentPos;
+
+				for (Command.Dir boxDir : Command.Dir.values()) {
+					Position newBoxPos = boxPos.add(boxDir);
+
+					// Check if there's something on the cell to which the agent is moving
+					if (this.cellIsFreeIgnore(newBoxPos)) {
+						ArrayList<Command> otherCommands = new ArrayList<>(this.actions);
+						otherCommands.set(Character.getNumericValue(agent), new Command.Push(agentDir, boxDir));
+
+						MAState newState = new MAState(this, otherCommands);
+						newState.path.add(newBoxPos);
+						expandedStates.add(newState);
+					}
+				}
+			}
+		}
+
+		// Pull
+		for (Command.Dir boxDir : Command.Dir.values()) {
+			Position boxPos = agentPos.add(boxDir);
+
+			if (this.boxAt(boxPos, agentColor)) {
+
+				for (Command.Dir agentDir : Command.Dir.values()) {
+					Position newAgentPos = agentPos.add(agentDir);
+
+					if (this.cellIsFreeIgnore(newAgentPos)) {
+						ArrayList<Command> otherCommands = new ArrayList<>(this.actions);
+						otherCommands.set(Character.getNumericValue(agent), new Command.Pull(agentDir, boxDir));
+
+						MAState newState = new MAState(this, otherCommands);
+						newState.path.add(newAgentPos);
+						expandedStates.add(newState);
+					}
+				}
+			}
+		}
+
+		// NoOp
+		ArrayList<Command> otherCommands = new ArrayList<>(this.actions);
+		otherCommands.set(Character.getNumericValue(agent), new Command.NoOp());
+
+		MAState newState = new MAState(this, otherCommands);
+		expandedStates.add(newState);
+		// Kommer sikkert til at fucke massivt med DFS og Greedy lol
+
+		Collections.shuffle(expandedStates, RNG);
+		return expandedStates;
+	}
+
 	public boolean cellIsFree(Position pos) {
 		return !this.walls.contains(pos) && !this.boxAt(pos) && !this.agentAt(pos);
 	}
+
+	public boolean cellIsFreeIgnore(Position pos) {
+		return !this.walls.contains(pos);
+	}
+
 
 	public boolean boxAt(Position pos) {
 		return this.boxes.containsKey(pos);
