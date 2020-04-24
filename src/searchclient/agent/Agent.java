@@ -100,7 +100,7 @@ public class Agent {
 	}
 
 
-	public static List<Objects> searchIgnore(char agent, List<MAState> alreadyPlanned, Strategy strategy, Position goalPos, int[] actionsPerformed) {
+	public static ArrayList<MAState> searchIgnore(char agent, List<MAState> alreadyPlanned, Strategy strategy, Position goalPos, int[] actionsPerformed) {
 		int agentId = Character.getNumericValue(agent);
 		int moves = actionsPerformed[agentId];
 		MAState initialState = alreadyPlanned.get(moves);
@@ -195,7 +195,7 @@ public class Agent {
 
 					actionsPerformed[fastestAgent] = fastestSASolution.size() - 1;
 				}
-				return Arrays.asList(extractedPlans, actionsPerformed);
+				return extractedPlans;
 			}
 
 			strategy.addToExplored(leafState);
@@ -209,6 +209,23 @@ public class Agent {
 		}
 	}
 
+	public static int[] planToActions(ArrayList<MAState> extractedPlan) {
+		int numAgents = extractedPlan.get(0).numAgents;
+		int[] actionsPerformed = new int[numAgents];
+
+		Iterator<MAState> planIterator = extractedPlan.iterator();
+
+		for (int i = 0; i < extractedPlan.size(); i++) {
+			List<Command> actions = extractedPlan.get(i).actions;
+
+			for (int j = 0; j < numAgents; j++) {
+				if (!(actions.get(j) instanceof Command.NoOp))
+					actionsPerformed[j] = i;
+			}
+		}
+
+		return actionsPerformed;
+	}
 
 	public static Map<Position, Character> moveBoxes(List<Position> boxPositions, MAState state) {
 		HashMap<Position, Character> fakeGoals = new HashMap<>();
