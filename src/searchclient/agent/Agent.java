@@ -108,6 +108,7 @@ public class Agent {
 
 		int origGoalCount = alreadyPlanned.get(alreadyPlanned.size() - (1 + moves)).goalCount();
 
+		System.err.format("goalPos at (%d, %d).\n", goalPos.getCol(), goalPos.getRow());
 		System.err.format("Search starting (%c) with %d goals using strategy %s.\n", agent, origGoalCount, strategy.toString());
 
 		long iterations = 0;
@@ -133,6 +134,14 @@ public class Agent {
 
 			if (!leafState.isInitialState() && leafState.isGoalSatisfied(goalPos)) {
 				List<Position> boxPositions = new ArrayList<>();
+				System.err.println("leafState.path");
+				System.err.println(leafState.path);
+				System.err.println("goalPos");
+				System.err.println(goalPos);
+				System.err.println("leafState");
+				System.err.println(leafState);
+				System.err.println(leafState.parent);
+				leafState.path.remove(leafState.path.size() - 1);
 
 				for (Position pos : leafState.path) {
 					if (leafState.boxAt(pos)){
@@ -161,7 +170,7 @@ public class Agent {
 						Position agentPos = helperAgent.getKey();
 						char agentType = helperAgent.getValue();
 
-						if (initialState.color.get(agentType).equals(initialState.color.get(fakeGoalType))) {
+						if (!initialState.color.get(agentType).equals(initialState.color.get(fakeGoalType))) {
 							continue;
 						}
 
@@ -169,11 +178,14 @@ public class Agent {
 						String agentColor = initialState.color.get(agentType);
 
 						int helperMoves = actionsPerformed[helperAgentId];
+
 						MAState state = alreadyPlanned.get(helperMoves);
 						state.goals.put(fakeGoalPos, fakeGoalType);
 
-						ArrayList<MAState> saSolution = Agent.searchIgnore(agentType, alreadyPlanned,
-								new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), fakeGoalPos, actionsPerformed);
+						ArrayList<MAState> saSolution = Agent.search(agentType, alreadyPlanned.subList(helperMoves, alreadyPlanned.size()),
+								new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)));
+//						ArrayList<MAState> saSolution = Agent.search(agentType, alreadyPlanned,
+//								new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), fakeGoalPos, actionsPerformed);
 
 						if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
 							fastestSASolution = saSolution;
@@ -182,6 +194,8 @@ public class Agent {
 					}
 
 					assert fastestSASolution != null; // one layer deep quick fiks
+					actionsPerformed = Agent.planToActions(fastestSASolution);
+
 
 					for (int i = 1; i < fastestSASolution.size(); i++) {
 						MAState fastestSolution = fastestSASolution.get(i);
@@ -193,8 +207,10 @@ public class Agent {
 						extractedPlans.set(i, new MAState(prevPlan, exActions));
 					}
 
-					actionsPerformed[fastestAgent] = fastestSASolution.size() - 1;
+//					actionsPerformed[fastestAgent] = fastestSASolution.size() - 1;
 				}
+				System.err.println("extractedPlans");
+				System.err.println(extractedPlans);
 				return extractedPlans;
 			}
 
@@ -202,6 +218,7 @@ public class Agent {
 
 			for (MAState n : leafState.getExpandedStatesIgnore(agent)) {
 				if (!strategy.isExplored(n) && !strategy.inFrontier(n)) {
+					System.err.println(iterations);
 					strategy.addToFrontier(n);
 				}
 			}
@@ -209,13 +226,15 @@ public class Agent {
 		}
 	}
 
-	public static int[] planToActions(ArrayList<MAState> extractedPlan) {
+	public static int[] planToActions(List<MAState> extractedPlan) {
 		int numAgents = extractedPlan.get(0).numAgents;
+		System.err.println("Here comes dat numAgents");
+		System.err.println(numAgents);
 		int[] actionsPerformed = new int[numAgents];
 
 		Iterator<MAState> planIterator = extractedPlan.iterator();
 
-		for (int i = 0; i < extractedPlan.size(); i++) {
+		for (int i = 1; i < extractedPlan.size(); i++) {
 			List<Command> actions = extractedPlan.get(i).actions;
 
 			for (int j = 0; j < numAgents; j++) {
@@ -229,33 +248,41 @@ public class Agent {
 
 	public static Map<Position, Character> moveBoxes(List<Position> boxPositions, MAState state) {
 		HashMap<Position, Character> fakeGoals = new HashMap<>();
-		Set<Position> path = state.path;
+		List<Position> path = state.path;
 
 		// Flood-fill. Update shortest distances from each goal in turn using BFS
 		for (Position boxPosition : boxPositions) {
 			ArrayDeque<Position> frontier = new ArrayDeque<>(Collections.singletonList(boxPosition));
 			Set<Position> alreadyVisited = new HashSet<>();
 
+			System.err.println(path);
+
 			while (!frontier.isEmpty()) {
 				Position p = frontier.pop();
+
 
 				int row = p.getRow(), col = p.getCol();
 
 				if (p.within(0, 0, state.height - 1, state.width - 1) &&
 						!state.walls.contains(p) && !alreadyVisited.contains(p)) {
 
+					System.err.println(p);
+
 					if (!path.contains(p)) {
 
 						if (fakeGoals.containsKey(p)){
 							fakeGoals.remove(p);
 
-							MAState newState = new MAState(state);
+							MAState newState = new MAState(state, state.actions, true);
 							newState.path.add(p);
 
 							Map<Position, Character> tmpGoals = Agent.moveBoxes(Collections.singletonList(p), newState);
 							fakeGoals.putAll(tmpGoals);
 						}
 
+						System.err.println("Here comes dat p & boxPosition");
+						System.err.println(p);
+						System.err.println(boxPosition);
 						fakeGoals.put(p, state.boxes.get(boxPosition));
 						break;
 					}

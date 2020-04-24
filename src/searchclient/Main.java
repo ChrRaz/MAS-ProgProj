@@ -190,7 +190,9 @@ public class Main {
 					}
 				}
 				goalIndex++;
-				subLevels.add(newState);
+				MAState tmpState = new MAState(newState, Collections.nCopies(newState.numAgents, new Command.NoOp()));
+
+				subLevels.add(tmpState);
 
 			}
 		}
@@ -296,12 +298,14 @@ public class Main {
 				Position goalPos = goal.getKey();
 				Character goalType = goal.getValue();
 
+				System.err.format("goalPos at (%d, %d).\n", goalPos.getCol(), goalPos.getRow());
+
 				// Find single agent-goal pair such that agent fills goal fastest
 				for (Map.Entry<Position, Character> agent : initialState.agents.entrySet()) {
 					Position agentPos = agent.getKey();
 					char agentType = agent.getValue();
 
-					if (initialState.color.get(agentType).equals(initialState.color.get(goalType))){
+					if (!initialState.color.get(agentType).equals(initialState.color.get(goalType))){
 						continue;
 					}
 
@@ -324,7 +328,8 @@ public class Main {
 				}
 			}
 
-			assert fastestSASolution != null;
+			assert fastestSASolution != null; // :)
+			actionsPerformed = Agent.planToActions(fastestSASolution);
 
 			System.err.printf("Fastest agent was (%d) with %d moves\n", fastestAgent, fastestSASolution.size() - 1);
 			// System.err.println(fastestSASolution.get(fastestSASolution.size() - 1));
@@ -332,7 +337,7 @@ public class Main {
 			System.err.println();
 
 			// Note how much the agent has moved
-			actionsPerformed[fastestAgent] = fastestSASolution.size() - 1;
+//			actionsPerformed[fastestAgent] = fastestSASolution.size() - 1;
 
 			// Expand SA solution
 			while (fastestSASolution.size() < maSolution.size()) {
@@ -350,11 +355,19 @@ public class Main {
 
 	public static List<List<Command>> mergeSolutions(List<List<Command>> solution1, List<List<Command>> solution2) {
 
+		System.err.println("solution1.size()");
+		System.err.println(solution1.size());
+		System.err.println(solution2.size());
+
 		if (solution2.size() > solution1.size()) {
 			List<List<Command>> tmp = solution1;
 			solution1 = solution2;
 			solution2 = tmp;
 		}
+		System.err.println("solution1.size() efter");
+		System.err.println(solution1);
+		System.err.println("solution2.size() efter");
+		System.err.println(solution2);
 
 		List<Command> initial = solution1.get(0);
 		List<List<Command>> mergedSolutionStates = new ArrayList<>(Collections.singletonList(initial)); // yolo
@@ -422,14 +435,17 @@ public class Main {
 				subSolution = Agent.saSearch(subLevel, strategy);
 			}
 			else {
-				subSolution = maSolve(subLevel);
+				subSolution = maSolveIgnore(subLevel);
 			}
 			System.err.println(maSolution);
+			System.err.println("noget tekst");
 			System.err.println(subSolution);
 			assert subSolution != null;
 
 			List<List<Command>> solutionActions = subSolution.stream().map(x -> x.actions).collect(Collectors.toList());
 			maSolution = mergeSolutions(maSolution, solutionActions);
+			System.err.println("subSolution");
+			System.err.println(solutionActions);
 		}
 
 

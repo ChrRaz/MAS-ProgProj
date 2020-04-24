@@ -31,7 +31,7 @@ public class MAState {
 	public MAState parent;
 	public final List<Command> actions;
 
-	public Set<Position> path;
+	public List<Position> path;
 
 	private int g;
 
@@ -66,11 +66,11 @@ public class MAState {
 		this.fakeGoals = new HashMap<>();
 		this.agents = new TreeMap<>();
 		this.color = new HashMap<>();
-		this.path = new HashSet<>();
+		this.path = new ArrayList<>();
 	}
 
-	public MAState(MAState parent) {
-		this.actions = parent.actions;
+	public MAState(MAState parent, List<Command> actions, Boolean skrald) {
+		this.actions = new ArrayList<>(actions);
 		this.domain = parent.domain;
 		this.parent = parent;
 		this.g = parent.g() + 1;
@@ -83,7 +83,8 @@ public class MAState {
 		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
 		this.numAgents = parent.numAgents;
-		this.path = parent.path;
+		this.path = new ArrayList<>(parent.path);
+		this.applyActionsIgnore(actions);
 	}
 
 	public int g() {
@@ -277,9 +278,8 @@ public class MAState {
 				ArrayList<Command> otherCommands = new ArrayList<>(this.actions);
 				otherCommands.set(Character.getNumericValue(agent), new Command.Move(agentDir));
 
-				MAState newState = new MAState(this, otherCommands);
+				MAState newState = new MAState(this, otherCommands, true);
 				newState.path.add(newAgentPos);
-
 				expandedStates.add(newState);
 			}
 		}
@@ -300,7 +300,7 @@ public class MAState {
 						ArrayList<Command> otherCommands = new ArrayList<>(this.actions);
 						otherCommands.set(Character.getNumericValue(agent), new Command.Push(agentDir, boxDir));
 
-						MAState newState = new MAState(this, otherCommands);
+						MAState newState = new MAState(this, otherCommands, true);
 						newState.path.add(newBoxPos);
 						expandedStates.add(newState);
 					}
@@ -321,7 +321,7 @@ public class MAState {
 						ArrayList<Command> otherCommands = new ArrayList<>(this.actions);
 						otherCommands.set(Character.getNumericValue(agent), new Command.Pull(agentDir, boxDir));
 
-						MAState newState = new MAState(this, otherCommands);
+						MAState newState = new MAState(this, otherCommands, true);
 						newState.path.add(newAgentPos);
 						expandedStates.add(newState);
 					}
@@ -468,6 +468,55 @@ public class MAState {
 
 				Character box = this.boxes.remove(boxPos);
 				this.boxes.put(newBoxPos, box);
+
+			}
+		}
+	}
+
+	private void applyActionsIgnore(List<Command> actions) {
+		TreeMap<Position, Character> agents = new TreeMap<>(this.agents);
+
+		for (Map.Entry<Position, Character> agent : agents.entrySet()) {
+			Position agentPos = agent.getKey();
+			char agentType = agent.getValue();
+			int agentId = Character.getNumericValue(agentType);
+
+			Command command = actions.get(agentId);
+			if (command instanceof Command.Move) {
+				Position newAgentPos = agentPos.add(((Command.Move) command).getAgentDir());
+
+				assert this.cellIsFreeIgnore(newAgentPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+
+				this.agents.remove(agentPos);
+				this.agents.put(newAgentPos, agentType);
+
+			} else if (command instanceof Command.Push) {
+				Position newAgentPos = agentPos.add(((Command.Push) command).getAgentDir());
+				Position newBoxPos = newAgentPos.add(((Command.Push) command).getBoxDir());
+				String agentColor = this.color.get(agentType);
+
+				assert this.boxAt(newAgentPos, agentColor) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+				assert this.cellIsFreeIgnore(newBoxPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+
+				this.agents.remove(agentPos);
+				this.agents.put(newAgentPos, agentType);
+
+				Character box = this.boxes.remove(newAgentPos);
+				this.boxes.put(newBoxPos, box);
+
+			} else if (command instanceof Command.Pull) {
+				Position boxPos = agentPos.add(((Command.Pull) command).getBoxDir());
+				Position newAgentPos = agentPos.add(((Command.Pull) command).getAgentDir());
+				String agentColor = this.color.get(agentType);
+
+				assert this.boxAt(boxPos, agentColor) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+				assert this.cellIsFreeIgnore(newAgentPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+
+				this.agents.remove(agentPos);
+				this.agents.put(newAgentPos, agentType);
+
+				Character box = this.boxes.remove(boxPos);
+				this.boxes.put(agentPos, box);
 
 			}
 		}
