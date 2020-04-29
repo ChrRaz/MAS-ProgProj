@@ -31,7 +31,7 @@ public class MAState {
 	public MAState parent;
 	public final List<Command> actions;
 
-	public List<Position> path;
+	public Set<Position> path;
 
 	private int g;
 
@@ -49,7 +49,7 @@ public class MAState {
 		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
 		this.numAgents = parent.numAgents;
-		this.path = parent.path;
+		this.path = new HashSet<>(parent.path);
 		this.applyActions(actions);
 	}
 
@@ -66,7 +66,7 @@ public class MAState {
 		this.fakeGoals = new HashMap<>();
 		this.agents = new TreeMap<>();
 		this.color = new HashMap<>();
-		this.path = new ArrayList<>();
+		this.path = new HashSet<>();
 	}
 
 	public MAState(MAState parent, List<Command> actions, Boolean skrald) {
@@ -83,7 +83,7 @@ public class MAState {
 		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
 		this.numAgents = parent.numAgents;
-		this.path = new ArrayList<>(parent.path);
+		this.path = new HashSet<>(parent.path);
 		this.applyActionsIgnore(actions);
 	}
 
@@ -254,7 +254,7 @@ public class MAState {
 		return expandedStates;
 	}
 
-	private Position getPositionOfAgent(char agent) {
+	public Position getPositionOfAgent(char agent) {
 		for (Map.Entry<Position, Character> entry : this.agents.entrySet()) {
 			if (entry.getValue() == agent) {
 				return entry.getKey();

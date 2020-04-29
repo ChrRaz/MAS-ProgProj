@@ -192,7 +192,7 @@ public class Main {
 				goalIndex++;
 				MAState tmpState = new MAState(newState, Collections.nCopies(newState.numAgents, new Command.NoOp()));
 
-				subLevels.add(tmpState);
+				subLevels.add(newState);
 
 			}
 		}
@@ -280,6 +280,8 @@ public class Main {
 		int numAgents = initialState.numAgents;
 
 		List<MAState> maSolution = new ArrayList<>(Collections.singletonList(initialState));
+		// System.err.format("actions: %s",initialState.actions);
+		// assert false;
 
 		// Keep track of how many actions each agent has already performed
 		int[] actionsPerformed = new int[numAgents];
@@ -319,7 +321,7 @@ public class Main {
 					MAState state = maSolution.get(moves);
 
 					List<MAState> saSolution = Agent.searchIgnore(agentType, maSolution,
-							new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), goalPos, actionsPerformed);
+							new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), goalPos, actionsPerformed,Collections.emptySet());
 
 					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
 						fastestSASolution = saSolution;
@@ -327,7 +329,7 @@ public class Main {
 					}
 				}
 			}
-
+			
 			assert fastestSASolution != null; // :)
 			actionsPerformed = Agent.planToActions(fastestSASolution);
 
