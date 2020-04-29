@@ -318,7 +318,7 @@ public class Main {
 					int moves = actionsPerformed[agentId];
 					MAState state = maSolution.get(moves);
 
-					ArrayList<MAState> saSolution = Agent.searchIgnore(agentType, maSolution,
+					List<MAState> saSolution = Agent.searchIgnore(agentType, maSolution,
 							new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), goalPos, actionsPerformed);
 
 					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
@@ -340,6 +340,7 @@ public class Main {
 //			actionsPerformed[fastestAgent] = fastestSASolution.size() - 1;
 
 			// Expand SA solution
+
 			while (fastestSASolution.size() < maSolution.size()) {
 				MAState lastState = fastestSASolution.get(fastestSASolution.size() - 1);
 				List<Command> actions = maSolution.get(lastState.g() + 1).actions;

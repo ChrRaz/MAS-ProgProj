@@ -275,7 +275,7 @@ public class MAState {
 			Position newAgentPos = agentPos.add(agentDir);
 
 			if (this.cellIsFreeIgnore(newAgentPos)) {
-				ArrayList<Command> otherCommands = new ArrayList<>(this.actions);
+				ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(numAgents, new Command.NoOp()));
 				otherCommands.set(Character.getNumericValue(agent), new Command.Move(agentDir));
 
 				MAState newState = new MAState(this, otherCommands, true);
@@ -296,11 +296,12 @@ public class MAState {
 					Position newBoxPos = boxPos.add(boxDir);
 
 					// Check if there's something on the cell to which the agent is moving
-					if (this.cellIsFreeIgnore(newBoxPos)) {
-						ArrayList<Command> otherCommands = new ArrayList<>(this.actions);
+					if (this.cellIsFreeIgnore(newBoxPos)&&!newBoxPos.equals(agentPos)) {
+						ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(numAgents, new Command.NoOp()));
 						otherCommands.set(Character.getNumericValue(agent), new Command.Push(agentDir, boxDir));
 
 						MAState newState = new MAState(this, otherCommands, true);
+						newState.path.add(newAgentPos);
 						newState.path.add(newBoxPos);
 						expandedStates.add(newState);
 					}
@@ -317,8 +318,8 @@ public class MAState {
 				for (Command.Dir agentDir : Command.Dir.values()) {
 					Position newAgentPos = agentPos.add(agentDir);
 
-					if (this.cellIsFreeIgnore(newAgentPos)) {
-						ArrayList<Command> otherCommands = new ArrayList<>(this.actions);
+					if (this.cellIsFreeIgnore(newAgentPos)&&!newAgentPos.equals(boxPos)) {
+						ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(numAgents, new Command.NoOp()));
 						otherCommands.set(Character.getNumericValue(agent), new Command.Pull(agentDir, boxDir));
 
 						MAState newState = new MAState(this, otherCommands, true);
@@ -330,7 +331,7 @@ public class MAState {
 		}
 
 		// NoOp
-		ArrayList<Command> otherCommands = new ArrayList<>(this.actions);
+		ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(numAgents, new Command.NoOp()));
 		otherCommands.set(Character.getNumericValue(agent), new Command.NoOp());
 
 		MAState newState = new MAState(this, otherCommands);
