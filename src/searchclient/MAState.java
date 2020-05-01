@@ -44,7 +44,7 @@ public class MAState {
 		this.width = parent.width;
 		this.walls = parent.walls;
 		this.boxes = new TreeMap<>(parent.boxes);
-		this.goals = parent.goals;
+		this.goals = new HashMap<>(parent.goals);
 		this.fakeGoals = parent.fakeGoals;
 		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
@@ -78,7 +78,7 @@ public class MAState {
 		this.width = parent.width;
 		this.walls = parent.walls;
 		this.boxes = new TreeMap<>(parent.boxes);
-		this.goals = parent.goals;
+		this.goals = new HashMap<>(parent.goals);
 		this.fakeGoals = parent.fakeGoals;
 		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
@@ -260,7 +260,8 @@ public class MAState {
 				return entry.getKey();
 			}
 		}
-		throw new RuntimeException("Agent not found: " + agent);
+		return null;
+		// throw new RuntimeException("Agent not found: " + agent);
 	}
 
 

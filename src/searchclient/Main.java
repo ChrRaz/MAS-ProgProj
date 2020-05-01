@@ -288,6 +288,8 @@ public class Main {
 		// All agents have initially performed 0 actions
 		Arrays.fill(actionsPerformed, 0);
 
+		Map<Position, Character> goals = new HashMap<>(initialState.goals);
+
 		while (!maSolution.get(maSolution.size() - 1).isGoalState()) {
 
 			List<MAState> fastestSASolution = null;
@@ -296,9 +298,13 @@ public class Main {
 
 			System.err.printf("Moves: %s\n", Arrays.toString(actionsPerformed));
 
-			for (Map.Entry<Position, Character> goal : initialState.goals.entrySet()) {
+
+			for (Map.Entry<Position, Character> goal : goals.entrySet()) {
+				System.err.format("goal look like %s",initialState.goals.entrySet());
 				Position goalPos = goal.getKey();
 				Character goalType = goal.getValue();
+				if(maSolution.get(maSolution.size()-1).isGoalSatisfied(goalPos))
+				continue;
 
 				System.err.format("goalPos at (%d, %d).\n", goalPos.getCol(), goalPos.getRow());
 
@@ -319,15 +325,16 @@ public class Main {
 
 					int moves = actionsPerformed[agentId];
 					MAState state = maSolution.get(moves);
-
+					System.err.format("agent %s has done %d moves before search start\n",agent,moves);
 					List<MAState> saSolution = Agent.searchIgnore(agentType, maSolution,
-							new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), goalPos, actionsPerformed,Collections.emptySet());
+							new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), goalPos, actionsPerformed.clone(),Collections.emptySet());
 
 					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
 						fastestSASolution = saSolution;
 						fastestAgent = agentId;
 					}
 				}
+				// System.err.format("goal now look like %s and last state looks like \n%s \n",initialState.goals.entrySet(),fastestSASolution.get(fastestSASolution.size()-1));
 			}
 			
 			assert fastestSASolution != null; // :)
