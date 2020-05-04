@@ -101,10 +101,14 @@ public abstract class Heuristic implements Comparator<MAState> {
                 Position boxPos = box.getKey();
                 Character boxType = box.getValue();
 
-	            if (!this.color.equals(n.color.get(boxType)))
-		            continue;
+                if (!this.color.equals(n.color.get(boxType)))
+                    continue;
 
-	            if (this.chars.contains(boxType) && n.color.get(agentType).equals(n.color.get(boxType))) {
+                // Ignore boxes already on goals
+                if (n.goals.containsKey(boxPos) && n.goals.get(boxPos).equals(boxType))
+                    continue;
+
+                if (this.chars.contains(boxType) && n.color.get(agentType).equals(n.color.get(boxType))) {
                     int dist = Position.distance(agentPos, boxPos);
 
                     if (dist < minAgentDist)
@@ -113,7 +117,8 @@ public abstract class Heuristic implements Comparator<MAState> {
             }
         }
 
-        totalDistance += minAgentDist - 1;
+        if (minAgentDist != Integer.MAX_VALUE)
+            totalDistance += minAgentDist - 1;
 
         return totalDistance;
     }
