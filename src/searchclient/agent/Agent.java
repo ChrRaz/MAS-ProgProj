@@ -184,7 +184,7 @@ public class Agent {
 						System.err.println(freshInitialState);
 					}
 
-					Set<Position> objectPositions = Agent.lookAhead(shortExtractedPlans, freshInitialState);
+					Map<Position, Character> objectPositions = Agent.lookAhead(shortExtractedPlans, freshInitialState);
 
 					for (Position pos : alreadyMoved) {
 						objectPositions.remove(pos);
@@ -248,7 +248,7 @@ public class Agent {
 							// new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)));
 
 							HashSet<Position> nowMoved = new HashSet<>(alreadyMoved);
-							nowMoved.addAll(objectPositions);
+							nowMoved.addAll(objectPositions.keySet());
 
 							List<MAState> saSolution = Agent.searchIgnore(agentType, helperPlan,
 									new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), fakeGoalPos,
@@ -340,13 +340,16 @@ public class Agent {
 		return actionsPerformed;
 	}
 
-	public static Map<Position, Character> moveObjects(Set<Position> objectPositions, MAState state) {
+	public static Map<Position, Character> moveObjects(Map<Position, Character> objectPositions, MAState state) {
 		HashMap<Position, Character> fakeGoals = new HashMap<>();
 		Set<Position> path = state.path;
 		System.err.format("The path is %s\n", path);
 
 		// Flood-fill. Update shortest distances from each goal in turn using BFS
-		for (Position objectPosition : objectPositions) {
+		for (Map.Entry<Position, Character> object : objectPositions.entrySet()) {
+			Position objectPosition = object.getKey();
+			Character objectType = object.getValue();
+
 			ArrayDeque<Position> frontier = new ArrayDeque<>(Collections.singletonList(objectPosition));
 			Set<Position> alreadyVisited = new HashSet<>();
 
@@ -360,54 +363,60 @@ public class Agent {
 				if (p.within(0, 0, state.height - 1, state.width - 1) && !state.walls.contains(p)
 						&& !alreadyVisited.contains(p)) {
 
-					if (!path.contains(p)) {
+					if (!path.contains(p) && state.cellIsFree(p) && !fakeGoals.containsKey(p)) {
 
-						if (state.boxAt(p)) {
+						// if (state.boxAt(p)) {
+						//
+						// 	MAState newState = new MAState(state,
+						// 			Collections.nCopies(state.numAgents, new Command.NoOp()), true);
+						// 	newState.path.add(p);
+						//
+						// 	Set<Position> tempSet = new HashSet<>();
+						// 	tempSet.add(p);
+						//
+						// 	Map<Position, Character> tmpGoals = Agent.moveObjects(tempSet, newState);
+						//
+						// 	System.err.printf("Adding fake goals: %s\n", tmpGoals);
+						// 	fakeGoals.putAll(tmpGoals);
+						//
 
-							MAState newState = new MAState(state,
-									Collections.nCopies(state.numAgents, new Command.NoOp()), true);
-							newState.path.add(p);
 
-							Set<Position> tempSet = new HashSet<>();
-							tempSet.add(p);
+						/// Recursive
+						// } else if (fakeGoals.containsKey(p)) {
+						// 	fakeGoals.remove(p);
+						//
+						// 	MAState newState = new MAState(state,
+						// 			Collections.nCopies(state.numAgents, new Command.NoOp()), true);
+						// 	newState.path.add(p);
+						//
+						// 	Set<Position> tempSet = new HashSet<>();
+						// 	tempSet.add(p);
+						//
+						// 	Map<Position, Character> tmpGoals = Agent.moveObjects(tempSet, newState);
+						//
+						// 	fakeGoals.putAll(tmpGoals);
+						// }
 
-							Map<Position, Character> tmpGoals = Agent.moveObjects(tempSet, newState);
+						fakeGoals.put(p, objectType);
+						System.err.printf("Moving %s to %s\n", object, p);
 
-							fakeGoals.putAll(tmpGoals);
-
-						} else if (fakeGoals.containsKey(p)) {
-							fakeGoals.remove(p);
-
-							MAState newState = new MAState(state,
-									Collections.nCopies(state.numAgents, new Command.NoOp()), true);
-							newState.path.add(p);
-
-							Set<Position> tempSet = new HashSet<>();
-							tempSet.add(p);
-
-							Map<Position, Character> tmpGoals = Agent.moveObjects(tempSet, newState);
-
-							fakeGoals.putAll(tmpGoals);
-						}
-
-						System.err.println("Here comes dat p & boxPosition");
-						System.err.println(p);
-						System.err.println(objectPosition);
-						System.err.println(state);
-						if (state.boxAt(objectPosition)) {
-							fakeGoals.put(p, state.boxes.get(objectPosition));
-
-							System.err.println("found a object to be a box at");
-							System.err.println(objectPosition);
-							System.err.println(state.boxes.get(objectPosition));
-						}
-						if (state.agentAt(objectPosition)) {
-							fakeGoals.put(p, state.agents.get(objectPosition));
-
-							System.err.println("found a object to be a agent at");
-							System.err.println(objectPosition);
-							System.err.println(state.agents.get(objectPosition));
-						}
+						// System.err.println(state);
+						// if (state.boxAt(objectPosition)) {
+						// 	fakeGoals.put(p, state.boxes.get(objectPosition));
+						//
+						// 	System.err.println("found a object to be a box at");
+						// 	System.err.println(objectPosition);
+						// 	System.err.println(state.boxes.get(objectPosition));
+						// }
+						// if (state.agentAt(objectPosition)) {
+						// 	fakeGoals.put(p, state.agents.get(objectPosition));
+						//
+						// 	System.err.println("found a object to be a agent at");
+						// 	System.err.println(objectPosition);
+						// 	System.err.println(state.agents.get(objectPosition));
+						// }
+						// if (!state.boxAt(objectPosition) && !state.agentAt(objectPosition))
+						// 	System.err.printf("Nothing found at %s\n", objectPosition);
 						break;
 					}
 
@@ -629,8 +638,8 @@ public class Agent {
 
 	}
 
-	public static Set<Position> lookAhead(List<MAState> plan, MAState freshInitialState) {
-		Set<Position> objectPositions = new HashSet<>();
+	public static Map<Position, Character> lookAhead(List<MAState> plan, MAState freshInitialState) {
+		Map<Position, Character> objectPositions = new HashMap<>();
 
 		for (MAState state : plan) {
 
@@ -654,12 +663,16 @@ public class Agent {
 					// System.err.format("tempAgentPos is now %s \n", tempAgentPos);
 
 					if (freshInitialState.boxAt(tempAgentPos)) {
-						objectPositions.add(tempAgentPos);
+						Character b = freshInitialState.boxes.get(tempAgentPos);
+						objectPositions.put(tempAgentPos, b);
+						System.err.printf("Found box (%c) at %s in\n%s\n\n", b, tempAgentPos, freshInitialState);
 						// System.err.format("%s add after %s by %d\n",tempAgentPos,action,i);
 					}
 
 					if (freshInitialState.agentAt(tempAgentPos)) {
-						objectPositions.add(tempAgentPos);
+						Character a = freshInitialState.agents.get(tempAgentPos);
+						objectPositions.put(tempAgentPos, a);
+						System.err.printf("Found box (%c) at %s in\n%s\n\n", a, tempAgentPos, freshInitialState);
 						// System.err.format("%s add after %s by %d\n",tempAgentPos,action,i);
 					}
 
@@ -673,13 +686,15 @@ public class Agent {
 					Position tempBoxPos = tempAgentPos.add(push.getBoxDir());
 
 					if (freshInitialState.boxAt(tempBoxPos)) {
-						objectPositions.add(tempBoxPos);
-						// System.err.format("%s add after %s by %d\n",tempBoxPos,action,i);
+						Character b = freshInitialState.boxes.get(tempAgentPos);
+						objectPositions.put(tempAgentPos, b);
+						System.err.printf("Found box (%c) at %s in\n%s\n\n", b, tempAgentPos, freshInitialState);
 					}
 
 					if (freshInitialState.agentAt(tempBoxPos)) {
-						objectPositions.add(tempBoxPos);
-						// System.err.format("%s add after %s by %d\n",tempBoxPos,action,i);
+						Character a = freshInitialState.agents.get(tempAgentPos);
+						objectPositions.put(tempAgentPos, a);
+						System.err.printf("Found box (%c) at %s in\n%s\n\n", a, tempAgentPos, freshInitialState);
 					}
 				}
 				if (action instanceof Command.Pull) {
@@ -690,13 +705,17 @@ public class Agent {
 					// Position tempBoxPos = tempAgentPos.add(pull.getBoxDir());
 
 					if (freshInitialState.boxAt(tempAgentPos)) {
-						objectPositions.add(tempAgentPos);
+						Character b = freshInitialState.boxes.get(tempAgentPos);
+						objectPositions.put(tempAgentPos, b);
 						// System.err.format("%s add after %s by %d\n",tempAgentPos,action,i);
+						System.err.printf("Found box (%c) at %s in\n%s\n\n", b, tempAgentPos, freshInitialState);
 					}
 
 					if (freshInitialState.agentAt(tempAgentPos)) {
-						objectPositions.add(tempAgentPos);
+						Character a = freshInitialState.agents.get(tempAgentPos);
+						objectPositions.put(tempAgentPos, a);
 						// System.err.format("%s add after %s by %d\n",tempAgentPos,action,i);
+						System.err.printf("Found box (%c) at %s in\n%s\n\n", a, tempAgentPos, freshInitialState);
 					}
 				}
 			}
