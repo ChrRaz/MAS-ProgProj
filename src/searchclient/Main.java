@@ -332,7 +332,7 @@ public class Main {
 					MAState state = maSolution.get(moves);
 					System.err.format("agent %s has done %d moves before search start\n",agent,moves);
 					List<MAState> saSolution = Agent.searchIgnore(agentType, maSolution,
-							new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), goalPos, actionsPerformed.clone(),Collections.emptySet());
+							new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), goalPos, actionsPerformed.clone(), Collections.emptySet(), Collections.emptySet());
 
 					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
 						fastestSASolution = saSolution;

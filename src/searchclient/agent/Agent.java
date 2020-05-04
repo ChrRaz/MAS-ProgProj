@@ -97,7 +97,7 @@ public class Agent {
 	}
 
 	public static List<MAState> searchIgnore(char agent, List<MAState> alreadyPlanned, Strategy strategy,
-			Position goalPos, int[] actionsPerformed, Set<Position> oldPath) {
+			Position goalPos, int[] actionsPerformed, Set<Position> oldPath, Set<Position> alreadyMoved) {
 		int agentId = Character.getNumericValue(agent);
 		int moves = actionsPerformed[agentId];
 		MAState initialState = alreadyPlanned.get(moves);
@@ -173,9 +173,8 @@ public class Agent {
 
 					MAState freshInitialState = new MAState(initialState,
 							Collections.nCopies(leafState.numAgents, new Command.NoOp()));
+					// XXX Copy instead?
 					freshInitialState.path = leafState.path;
-
-					Set<Position> objectPositions = new HashSet<>();
 
 					for (MAState state : helperPlan) {
 						if(state.actions==null)
@@ -185,8 +184,11 @@ public class Agent {
 						System.err.println(freshInitialState);
 					}
 
-					objectPositions = Agent.lookAhead(shortExtractedPlans, freshInitialState);
+					Set<Position> objectPositions = Agent.lookAhead(shortExtractedPlans, freshInitialState);
 
+					for (Position pos : alreadyMoved) {
+						objectPositions.remove(pos);
+					}
 					
 					System.err.format("obejctPositions is %s \n", objectPositions);
 
@@ -245,11 +247,14 @@ public class Agent {
 							// helperPlan.subList(helperMoves, helperPlan.size()),
 							// new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)));
 
+							HashSet<Position> nowMoved = new HashSet<>(alreadyMoved);
+							nowMoved.addAll(objectPositions);
+
 							List<MAState> saSolution = Agent.searchIgnore(agentType, helperPlan,
 									new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), fakeGoalPos,
-									actionsPerformed, leafState.path);
+									actionsPerformed, leafState.path, nowMoved);
 
-							// state.goals.remove(fakeGoalPos);
+							state.goals.remove(fakeGoalPos);
 
 							if (fastestSASolution == null
 									|| (saSolution != null && saSolution.size() < fastestSASolution.size())) {
