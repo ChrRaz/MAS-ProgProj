@@ -23,7 +23,7 @@ public class MAState {
 	public final Set<Position> walls;
 	public final TreeMap<Position, Character> boxes;
 	public final Map<Position, Character> goals;
-	public Map<Position, Character> fakeGoals;
+	public final Map<Position, Character> fakeGoals;
 
 	public final TreeMap<Position, Character> agents;
 	public final Map<Character, String> color;
@@ -33,7 +33,7 @@ public class MAState {
 
 	public Set<Position> path;
 
-	private int g;
+	private final int g;
 
 	public MAState(MAState parent, List<Command> actions) {
 		this.actions = new ArrayList<>(actions);
@@ -276,7 +276,7 @@ public class MAState {
 			Position newAgentPos = agentPos.add(agentDir);
 
 			if (this.cellIsFreeIgnore(newAgentPos)) {
-				ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(numAgents, new Command.NoOp()));
+				ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(this.numAgents, new Command.NoOp()));
 				otherCommands.set(Character.getNumericValue(agent), new Command.Move(agentDir));
 
 				MAState newState = new MAState(this, otherCommands, true);
@@ -297,8 +297,8 @@ public class MAState {
 					Position newBoxPos = boxPos.add(boxDir);
 
 					// Check if there's something on the cell to which the agent is moving
-					if (this.cellIsFreeIgnore(newBoxPos)&&!newBoxPos.equals(agentPos)) {
-						ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(numAgents, new Command.NoOp()));
+					if (this.cellIsFreeIgnore(newBoxPos) && !newBoxPos.equals(agentPos)) {
+						ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(this.numAgents, new Command.NoOp()));
 						otherCommands.set(Character.getNumericValue(agent), new Command.Push(agentDir, boxDir));
 
 						MAState newState = new MAState(this, otherCommands, true);
@@ -319,8 +319,8 @@ public class MAState {
 				for (Command.Dir agentDir : Command.Dir.values()) {
 					Position newAgentPos = agentPos.add(agentDir);
 
-					if (this.cellIsFreeIgnore(newAgentPos)&&!newAgentPos.equals(boxPos)) {
-						ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(numAgents, new Command.NoOp()));
+					if (this.cellIsFreeIgnore(newAgentPos) && !newAgentPos.equals(boxPos)) {
+						ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(this.numAgents, new Command.NoOp()));
 						otherCommands.set(Character.getNumericValue(agent), new Command.Pull(agentDir, boxDir));
 
 						MAState newState = new MAState(this, otherCommands, true);
@@ -332,10 +332,10 @@ public class MAState {
 		}
 
 		// NoOp
-		ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(numAgents, new Command.NoOp()));
-		otherCommands.set(Character.getNumericValue(agent), new Command.NoOp());
+		ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(this.numAgents, new Command.NoOp()));
 
 		MAState newState = new MAState(this, otherCommands);
+		newState.path.add(agentPos);
 		expandedStates.add(newState);
 		// Kommer sikkert til at fucke massivt med DFS og Greedy lol
 
@@ -600,7 +600,19 @@ public class MAState {
 					s.append(this.agents.get(pos));
 				} else if (this.boxAt(pos)) {
 					s.append(Character.toLowerCase(this.boxes.get(pos)));
-				} else if (this.goals.containsKey(pos)) {
+				} else if (this.walls.contains(pos)) {
+					s.append("+");
+				} else {
+					s.append(" ");
+				}
+			}
+
+			s.append(" | ");
+
+			for (int col = 0; col < this.width; col++) {
+				Position pos = new Position(row, col);
+
+				if (this.goals.containsKey(pos)) {
 					s.append(this.goals.get(pos));
 				} else if (this.walls.contains(pos)) {
 					s.append("+");

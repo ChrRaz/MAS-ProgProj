@@ -300,13 +300,13 @@ public class Main {
 
 
 			for (Map.Entry<Position, Character> goal : goals.entrySet()) {
-				System.err.format("goal look like %s",initialState.goals.entrySet());
+				System.err.println("initialState.goals = " + initialState.goals);
 				Position goalPos = goal.getKey();
-				Character goalType = goal.getValue();
+				char goalType = goal.getValue();
 				if(maSolution.get(maSolution.size()-1).isGoalSatisfied(goalPos))
-				continue;
+					continue;
 
-				System.err.format("goalPos at (%d, %d).\n", goalPos.getCol(), goalPos.getRow());
+				System.err.format("goalPos at %s\n", goalPos);
 
 				// Find single agent-goal pair such that agent fills goal fastest
 				for (Map.Entry<Position, Character> agent : initialState.agents.entrySet()) {
@@ -317,9 +317,14 @@ public class Main {
 						continue;
 					}
 
+					// Skip agent goals for other agents
+					if (Character.isDigit(goalType) && goalType != agentType)
+						continue;
+
 					int agentId = Character.getNumericValue(agentType);
 					String agentColor = initialState.color.get(agentType);
 
+					// XXX Should never be true?
 					if (maSolution.get(maSolution.size() - 1).goalCount(agentColor) == 0)
 						continue;
 
@@ -432,6 +437,8 @@ public class Main {
 
 
 		List<MAState> subLevels = splitLevel(initialState);
+		System.err.printf("Found %d sub-levels.\n", subLevels.size());
+
 		List<List<Command>> maSolution = new ArrayList<>(Collections.singletonList(Collections.nCopies(initialState.numAgents, new Command.NoOp())));
 
 		for (MAState subLevel : subLevels) {
