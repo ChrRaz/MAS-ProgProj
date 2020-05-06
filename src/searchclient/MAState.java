@@ -3,6 +3,8 @@ package searchclient;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import searchclient.util.Sets;
+
 public class MAState {
 	private static final Random RNG = new Random(1);
 
@@ -424,7 +426,149 @@ public class MAState {
 		return true;
 	}
 
-	private void applyActions(List<Command> actions) {
+	public boolean isCompatible(MAState nextState){
+
+		// if(this.extractPlan().size()>10 && nextState.extractPlan().size()>10){
+		// 	System.err.println("extractPlan from this");
+		// 	for( MAState state : this.extractPlan().subList(this.extractPlan().size()-5, this.extractPlan().size()))
+		// 		System.err.format("%s  actions: %s\n",state,state.actions);
+
+		// 	System.err.println("extractPlan from nextState");
+		// 	for( MAState state : nextState.extractPlan().subList(nextState.extractPlan().size()-5, nextState.extractPlan().size()))
+		// 		System.err.format("%s actions: %s\n",state,state.actions);
+		// }
+
+
+		for(int i = 0 ; i<this.numAgents; i++){
+			Command com = this.actions.get(i);
+			char c = Integer.toString(i).charAt(0);
+			if(!(com instanceof Command.NoOp) && this.agents.get(this.getPositionOfAgent(c))==null)
+				return false;
+
+			Command com2 = nextState.actions.get(i);
+			if(!(com2 instanceof Command.NoOp)){
+				if(nextState.getPositionOfAgent(c) == null || nextState.agents.get(nextState.getPositionOfAgent(c))==null)
+				return false;
+			}
+		}
+		// if(!this.parent.isApplicable(this.actions)){
+		// 	System.err.format("%s could not be applied to \n%s\n",this.actions,this.parent);
+		// 	assert false;
+		// }
+		// if(!nextState.parent.isApplicable(nextState.actions)){
+		// 	assert false;
+		// }
+
+		// System.err.format("this has %s actions and is \n%s\n nextState has %s actions and is \n%s\n",this.actions,this,nextState.actions,nextState);
+
+		Set<Position> thisNew = this.getNewPositions();
+		// System.err.println("getting thatNew");
+		Set<Position> thatNew = nextState.getNewPositions();
+		// System.err.println("got thatNew");
+		Set<Position> thisOld = this.getOldPositions();
+		// System.err.println("getting thatOld");
+		Set<Position> thatOld = nextState.getOldPositions();
+		// System.err.println("got thatOld");
+		// System.err.format("this.actions %s  nextState.actions %s\n",this.actions,nextState.actions);
+		// System.err.format("thisNew: %s  thatNew: %s  thisOld: %s  thatOld: %s\n", thisNew, thatNew,thisOld,thatOld);
+
+		if(!Sets.intersection(thisNew,thatNew).isEmpty()){
+			System.err.println("thisNew and thatNew was not compatible");
+			System.err.format("thisNew: %s    thatNew: %s  this:\n%s\n that: \n%s\n",thisNew,thatNew,this,nextState);	
+			return false;
+		}
+		if(!Sets.intersection(thisNew,thatOld).isEmpty()){
+			System.err.println("thisNew and thatOld was not compatible");	
+			return false;
+		}
+		if(!Sets.intersection(thisOld,thatNew).isEmpty()){
+			System.err.println("thisOld and thatNew was not compatible");	
+			return false;
+		}
+		if(!Sets.intersection(thisOld,thatOld).isEmpty()){
+			System.err.println("thisOld and thatOld was not compatible");	
+			return false;
+		}
+
+		return true;
+	}
+
+	public Set<Position> getOldPositions(){
+		MAState parent = this.parent;
+		Set<Position> oldPositions = new HashSet<>();
+		// System.err.format("parent agents is %s\n",parent.agents.entrySet());
+
+		for (Map.Entry<Position, Character> agent : parent.agents.entrySet()) {
+			Position agentPos = agent.getKey();
+			char agentType = agent.getValue();
+			int agentId = Character.getNumericValue(agentType);
+
+			Command command = this.actions.get(agentId);
+			if (command instanceof Command.Move) {
+				oldPositions.add(agentPos);
+				// System.err.format("move oldPosition is %s\n",oldPositions);
+
+			} else if (command instanceof Command.Push) {
+
+				Position newAgentPos = agentPos.add(((Command.Push) command).getAgentDir());
+
+				oldPositions.add(agentPos);
+				oldPositions.add(newAgentPos);
+				// System.err.format("push oldPosition is %s\n",oldPositions);
+			} else if (command instanceof Command.Pull) {
+
+				Position boxPos = agentPos.add(((Command.Pull) command).getBoxDir());
+				oldPositions.add(boxPos);
+				oldPositions.add(agentPos);
+				// System.err.format("pull oldPosition is %s\n",oldPositions);
+			} else {
+				// System.err.format("%s was not one of the other commands\n",command);
+			}
+		}
+
+		return oldPositions;
+	}
+
+	public Set<Position> getNewPositions(){
+		MAState parent = this.parent;
+		Set<Position> newPositions = new HashSet<>();
+
+		for (Map.Entry<Position, Character> agent : parent.agents.entrySet()) {
+			Position agentPos = agent.getKey();
+			char agentType = agent.getValue();
+			int agentId = Character.getNumericValue(agentType);
+
+			Command command = this.actions.get(agentId);
+			if (command instanceof Command.Move) {
+
+				Position newAgentPos = agentPos.add(((Command.Move) command).getAgentDir());
+
+				newPositions.add(newAgentPos);
+
+			} else if (command instanceof Command.Push) {
+
+				Position newAgentPos = agentPos.add(((Command.Push) command).getAgentDir());
+				Position boxPos = newAgentPos;
+				Position newBoxPos = boxPos.add(((Command.Push) command).getBoxDir());
+
+				newPositions.add(newBoxPos);
+				newPositions.add(newAgentPos);
+
+			} else if (command instanceof Command.Pull) {
+
+				Position boxPos = agentPos.add(((Command.Pull) command).getBoxDir());
+				Position newAgentPos = agentPos.add(((Command.Pull) command).getAgentDir());
+				Position newBoxPos = agentPos;
+
+				newPositions.add(newAgentPos);
+				newPositions.add(newBoxPos);
+			}
+		}
+
+		return newPositions;
+	}
+
+	public void applyActions(List<Command> actions) {
 		TreeMap<Position, Character> agents = new TreeMap<>(this.agents);
 
 		for (Map.Entry<Position, Character> agent : agents.entrySet()) {
