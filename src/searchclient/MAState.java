@@ -736,7 +736,20 @@ public class MAState {
 	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder();
+
+		s.append(" ");
+		for (int col = 0; col < this.width; col++) {
+			s.append(col % 10);
+		}
+		s.append("  |  ");
+		for (int col = 0; col < this.width; col++) {
+			s.append(col % 10);
+		}
+		s.append("\n");
+
 		for (int row = 0; row < this.height; row++) {
+			s.append(row % 10).append(" ");
+
 			for (int col = 0; col < this.width; col++) {
 				Position pos = new Position(row, col);
 
@@ -752,6 +765,7 @@ public class MAState {
 			}
 
 			s.append(" | ");
+			s.append(row % 10).append(" ");
 
 			for (int col = 0; col < this.width; col++) {
 				Position pos = new Position(row, col);
