@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.PriorityQueue;
 
 public abstract class Strategy {
-    private HashSet<MAState> explored;
+    public HashSet<MAState> explored;
     private final long startTime;
 
     public Strategy() {

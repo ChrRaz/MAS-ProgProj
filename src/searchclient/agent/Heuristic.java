@@ -60,15 +60,15 @@ public abstract class Heuristic implements Comparator<MAState> {
         }
 
         // Print the distance fields
-        for (Character c : this.chars) {
-            System.err.println(c);
-            System.err.println(this.distToGoal.stream().map(
-                    row -> row.stream().map(
-                            x -> String.format("%3d", x.getOrDefault(c, 0))
-                    ).collect(Collectors.joining(" "))
-            ).collect(Collectors.joining("\n")));
-            System.err.println();
-        }
+        // for (Character c : this.chars) {
+        //     System.err.println(c);
+        //     System.err.println(this.distToGoal.stream().map(
+        //             row -> row.stream().map(
+        //                     x -> String.format("%3d", x.getOrDefault(c, 0))
+        //             ).collect(Collectors.joining(" "))
+        //     ).collect(Collectors.joining("\n")));
+        //     System.err.println();
+        // }
     }
 
     public int h(MAState n) {

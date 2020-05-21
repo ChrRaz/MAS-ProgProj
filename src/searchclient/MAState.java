@@ -89,6 +89,30 @@ public class MAState {
 		this.applyActionsIgnore(actions);
 	}
 
+	// helper function to clone
+	private MAState(MAState state){
+		if(state.actions==null)
+			this.actions = null;
+		else
+			this.actions = new ArrayList<>(state.actions);
+		this.domain = state.domain;
+		if(state.parent==null)
+			this.parent = null;
+		else
+			this.parent = new MAState(state.parent);
+		this.g = state.g();
+		this.height = state.height;
+		this.width = state.width;
+		this.walls = state.walls;
+		this.boxes = new TreeMap<>(state.boxes);
+		this.goals = new HashMap<>(state.goals);
+		this.fakeGoals = state.fakeGoals;
+		this.agents = new TreeMap<>(state.agents);
+		this.color = state.color;
+		this.numAgents = state.numAgents;
+		this.path = new HashSet<>(state.path);
+	}
+
 	public int g() {
 		return this.g;
 	}
@@ -493,6 +517,18 @@ public class MAState {
 		return true;
 	}
 
+	public char getCell(Position pos){
+		if (this.agents.containsKey(pos)) {
+			return this.agents.get(pos);
+		} else if (this.boxAt(pos)) {
+			return this.boxes.get(pos);
+		} else if (this.walls.contains(pos)) {
+			return '+';
+		} else {
+			return ' ';
+		}
+	}
+
 	public Set<Position> getOldPositions(){
 		MAState parent = this.parent;
 		Set<Position> oldPositions = new HashSet<>();
@@ -667,6 +703,12 @@ public class MAState {
 			}
 		}
 	}
+
+
+	public MAState clone() {
+		return new MAState(this);
+	}
+
 
 	public boolean isSAState() {
 		return this.agents.size() == 1;
