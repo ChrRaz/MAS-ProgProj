@@ -110,7 +110,8 @@ public class Agent {
 		int origGoalCount = alreadyPlanned.get(alreadyPlanned.size() - (1 + moves)).goalCount();
 		System.err.format("agent %s has moved %d\n", agent, moves);
 		System.err.format("goalPos at %s.\n", goalPos);
-		System.err.format("initialState has %s as goals and has %s as actions\n", initialState.goals,initialState.actions);
+		System.err.format("initialState has %s as goals and has %s as actions\n", initialState.goals,
+				initialState.actions);
 		System.err.format("alreadyPlanned.size() = %s and last state is \n%s with actions: %s\n", alreadyPlanned.size(),
 				alreadyPlanned.get(alreadyPlanned.size() - 1), alreadyPlanned.get(alreadyPlanned.size() - 1).actions);
 		System.err.format("goals: %s \n", initialState.goals);
@@ -126,7 +127,7 @@ public class Agent {
 				System.err.format("Search failed after %d iterations :(, last state was: %s\n with a g value of %d\n ",
 						iterations, leafState, leafState.g());
 				System.err.println("explored consists of:");
-				for (MAState state : strategy.explored){
+				for (MAState state : strategy.explored) {
 					System.err.println(state);
 				}
 
@@ -151,13 +152,13 @@ public class Agent {
 				System.err.println("goalPos = " + goalPos);
 				System.err.println("leafState =\n" + leafState);
 				// System.err.println("initialState = " + initialState);
-				System.err.format("%s found goal after %d states\n", agent,leafState.g()-initialState.g());
+				System.err.format("%s found goal after %d states\n", agent, leafState.g() - initialState.g());
 				// System.err.format("LeafState.path is of size %d",leafState.path.size());
 				// if (leafState.path.size() > 0)
 				// leafState.path.remove(leafState.path.size() - 1);
 
 				List<MAState> extractedPlans = leafState.extractPlanWithInitial();
-				List<MAState> shortExtractedPlans = extractedPlans.subList(moves+1, extractedPlans.size());
+				List<MAState> shortExtractedPlans = extractedPlans.subList(moves + 1, extractedPlans.size());
 				int[] actionsSEP = Agent.planToActions(extractedPlans.subList(moves, extractedPlans.size()));
 				System.err.format("agent: %c started from %d moves\n", agent, moves);
 				System.err.format("shortExtractedPlans:\n");
@@ -205,20 +206,26 @@ public class Agent {
 						// System.err.println(freshInitialState);
 					}
 
-					if(!freshInitialState.getPositionOfAgent(agent).equals(initialState.getPositionOfAgent(agent))){
+					if (!freshInitialState.getPositionOfAgent(agent).equals(initialState.getPositionOfAgent(agent))) {
 						System.err.println("Replaning because we helped our selfs");
-						System.err.format("fresh pos %s pre pos %s \n", freshInitialState.getPositionOfAgent(agent),initialState.getPositionOfAgent(agent));
-						System.err.format("are they different: %b",freshInitialState.getPositionOfAgent(agent)!=initialState.getPositionOfAgent(agent));
-						System.err.format("agent is %s and initialState is \n%s\n and freshInitialState is \n%s\n",agent,initialState,freshInitialState);
+						System.err.format("fresh pos %s pre pos %s \n", freshInitialState.getPositionOfAgent(agent),
+								initialState.getPositionOfAgent(agent));
+						System.err.format("are they different: %b",
+								freshInitialState.getPositionOfAgent(agent) != initialState.getPositionOfAgent(agent));
+						System.err.format("agent is %s and initialState is \n%s\n and freshInitialState is \n%s\n",
+								agent, initialState, freshInitialState);
 						List<MAState> newAlreadyPlanned = new ArrayList<>(helperPlan);
 						int[] newActionsPerformed = Agent.planToActions(newAlreadyPlanned);
-						Strategy newStrategy =  new Strategy.StrategyBestFirst(new Heuristic.AStar(initialState, initialState.color.get(agent)));
-						return Agent.searchIgnore(agent, newAlreadyPlanned, newStrategy, goalPos, newActionsPerformed, oldPath);
+						Strategy newStrategy = new Strategy.StrategyBestFirst(
+								new Heuristic.AStar(initialState, initialState.color.get(agent)));
+						return Agent.searchIgnore(agent, newAlreadyPlanned, newStrategy, goalPos, newActionsPerformed,
+								oldPath);
 					}
 
+					System.err.format("freshInitialState looks like: \n%s\n", freshInitialState);
 					objectPositions = Agent.lookAhead(shortExtractedPlans, freshInitialState, agent);
 
-					System.err.format("obejctPositions is %s \n", objectPositions);
+					System.err.format("obejctPositions is %s found in \n%s\n", objectPositions, freshInitialState);
 
 					// assert false;
 
@@ -233,11 +240,13 @@ public class Agent {
 					// If nothing needs to move we are done
 					if (objectPositions.size() < 1) {
 						// if(leafState.path.size()<1)
-						// 	return helperPlan;
+						// return helperPlan;
 						// int [] actions2 = Agent.planToActions(shortExtractedPlans);
 						// int [] actionHelperPlan = Agent.planToActions(helperPlan);
-						// System.err.println("helperPlan actions: " + Arrays.toString(actionHelperPlan));
-						// System.err.println("shortExtractedPlans actions: " + Arrays.toString(actions2));
+						// System.err.println("helperPlan actions: " +
+						// Arrays.toString(actionHelperPlan));
+						// System.err.println("shortExtractedPlans actions: " +
+						// Arrays.toString(actions2));
 						return Agent.solveConflicts(helperPlan, shortExtractedPlans, agent, actionsSEP);
 					}
 
@@ -277,7 +286,8 @@ public class Agent {
 
 							// MAState state = helperPlan.get(helperMoves);
 
-							List<MAState> fakeHelperPlan = helperPlan.get(helperPlan.size()-1).clone().extractPlanWithInitial();
+							List<MAState> fakeHelperPlan = helperPlan.get(helperPlan.size() - 1).clone()
+									.extractPlanWithInitial();
 
 							fakeHelperPlan.get(helperMoves).goals.put(fakeGoalPos, fakeGoalType);
 
@@ -292,8 +302,9 @@ public class Agent {
 									new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), fakeGoalPos,
 									actionsPerformed, leafState.path);
 
-							System.err.format("done getting help from %s with goalPos %s!!!!!11\n",helperAgent,fakeGoalPos);
-							System.err.format("all fakegoals are: %s\n",fakeGoals);
+							System.err.format("done getting help from %s with goalPos %s!!!!!11\n", helperAgent,
+									fakeGoalPos);
+							System.err.format("all fakegoals are: %s\n", fakeGoals);
 							// state.goals.remove(fakeGoalPos);
 
 							if (fastestSASolution == null
@@ -303,7 +314,7 @@ public class Agent {
 							}
 						}
 
-						assert fastestSASolution != null : String.format("goalPos is %s\n", goalPos); 
+						assert fastestSASolution != null : String.format("goalPos is %s\n", goalPos);
 
 						System.err.format("Replacing %s with ", Arrays.toString(actionsPerformed));
 						actionsPerformed = Agent.planToActions(fastestSASolution);
@@ -313,13 +324,13 @@ public class Agent {
 						// System.err.format("fastestSASolution is: \n");
 
 						// for (MAState state : fastestSASolution){
-						// 	System.err.println(state);
+						// System.err.println(state);
 						// }
 
 						// System.err.format("and helperPlan is: \n");
 
 						// for (MAState state : helperPlan){
-						// 	System.err.println(state);
+						// System.err.println(state);
 						// }
 						// System.err.println();
 
@@ -328,22 +339,22 @@ public class Agent {
 						// fastestSASolution.size());
 						// Agent.solveConflicts(fastestSASolution, extractedPlans);
 
-						// helperPlan = Agent.extendSolution(helperPlan, fastestSASolution); // Agent.extendSolution(helperPlan, fastestSASolution);
+						// helperPlan = Agent.extendSolution(helperPlan, fastestSASolution); //
+						// Agent.extendSolution(helperPlan, fastestSASolution);
 
 						helperPlan = new ArrayList<>(Collections.singletonList(alreadyPlanned.get(0)));
 
 						MAState prevState = helperPlan.get(0);
-						for(MAState state : fastestSASolution.subList(1,fastestSASolution.size())){
-							helperPlan.add(new MAState(prevState,state.actions));
-							prevState = helperPlan.get(helperPlan.size()-1);
+						for (MAState state : fastestSASolution.subList(1, fastestSASolution.size())) {
+							helperPlan.add(new MAState(prevState, state.actions));
+							prevState = helperPlan.get(helperPlan.size() - 1);
 						}
-
 
 						// // Expand SA solution
 						// while (fastestSASolution.size() < helperPlan.size()) {
-						// 	MAState lastState = fastestSASolution.get(fastestSASolution.size() - 1);
-						// 	List<Command> actions = maSolution.get(lastState.g() + 1).actions;
-						// 	fastestSASolution.add(new MAState(lastState, actions));
+						// MAState lastState = fastestSASolution.get(fastestSASolution.size() - 1);
+						// List<Command> actions = maSolution.get(lastState.g() + 1).actions;
+						// fastestSASolution.add(new MAState(lastState, actions));
 						// }
 						// System.err.format("combining helperPlan of size %d with fasterSASolution of
 						// size %d\n",helperPlan.size(),fastestSASolution.size());
@@ -403,7 +414,7 @@ public class Agent {
 			// }
 			// }
 
-			boolean insideList = leafState.g() < (alreadyPlanned.size())-1;
+			boolean insideList = leafState.g() < (alreadyPlanned.size()) - 1;
 			int numAgents = leafState.numAgents;
 
 			// System.err.format("alreadyPlanned.size(): %s leafState.g():
@@ -415,9 +426,10 @@ public class Agent {
 				if (!leafState.parent.isApplicable(actions)) {
 
 					// System.err.format("could not apply %s to \n%s\n", actions, leafState.parent);
-					// System.err.format("parent.actions: %s  and leafstate.g()=%d\n",leafState.parent.actions,leafState.g());
+					// System.err.format("parent.actions: %s and
+					// leafstate.g()=%d\n",leafState.parent.actions,leafState.g());
 					// System.err.println("parent.extractPlanWithInitial is:");
-					for(MAState tempstate : leafState.parent.extractPlanWithInitial()){
+					for (MAState tempstate : leafState.parent.extractPlanWithInitial()) {
 						System.err.println(tempstate);
 					}
 					continue;
@@ -431,9 +443,10 @@ public class Agent {
 				// System.err.format("state.actions is %s\n", state.actions);
 			}
 
-			if (iterations>0) {
+			if (iterations > 0) {
 
-				// System.err.format("state.actions: %s leafState.actions: %s", state.actions, leafState.actions);
+				// System.err.format("state.actions: %s leafState.actions: %s", state.actions,
+				// leafState.actions);
 
 				if (leafState.isCompatible(state)) {
 
@@ -443,10 +456,12 @@ public class Agent {
 
 					leafState.goals.putAll(initialState.goals);
 					leafState.path = temp;
-					// System.err.format("could apply %s to \n%s\n and got \n%s\n",state.actions,leafState.parent, leafState);
+					// System.err.format("could apply %s to \n%s\n and got
+					// \n%s\n",state.actions,leafState.parent, leafState);
 				} else {
 					iterations++;
-					// System.err.format("could not apply %s to \n%s\n", state.actions, leafState.parent);
+					// System.err.format("could not apply %s to \n%s\n", state.actions,
+					// leafState.parent);
 					// System.err.println("we continued");
 					continue;
 				}
@@ -458,7 +473,7 @@ public class Agent {
 					// System.err.println("state was added with actions: " + n.actions);
 				}
 				// if (strategy.isExplored(n)){
-				// 	System.err.println("Following state was in explored:\n" + state);
+				// System.err.println("Following state was in explored:\n" + state);
 				// }
 			}
 			iterations++;
@@ -473,7 +488,7 @@ public class Agent {
 
 		for (int i = 0; i < extractedPlan.size(); i++) {
 
-			if(extractedPlan.get(i).actions==null)
+			if (extractedPlan.get(i).actions == null)
 				continue;
 
 			List<Command> actions = extractedPlan.get(i).actions;
@@ -492,7 +507,7 @@ public class Agent {
 		Set<Position> path = state.path;
 		System.err.format("The path is %s\n", path);
 
-		System.err.format("state has boxes at %s and agents at %s\n",state.boxes,state.agents);
+		System.err.format("state has boxes at %s and agents at %s\n", state.boxes, state.agents);
 
 		// Flood-fill. Update shortest distances from each goal in turn using BFS
 		for (Position objectPosition : objectPositions) {
@@ -503,19 +518,19 @@ public class Agent {
 
 			// if (state.boxAt(objectPosition)) {
 
-			// 	objectName =
-			// 	fakeGoals.put(p, state.boxes.get(objectPosition));
+			// objectName =
+			// fakeGoals.put(p, state.boxes.get(objectPosition));
 
-			// 	System.err.println("found a object to be a box at");
-			// 	System.err.println(objectPosition);
-			// 	System.err.println(state.boxes.get(objectPosition));
+			// System.err.println("found a object to be a box at");
+			// System.err.println(objectPosition);
+			// System.err.println(state.boxes.get(objectPosition));
 			// }
 			// if (state.agentAt(objectPosition)) {
-			// 	fakeGoals.put(p, state.agents.get(objectPosition));
+			// fakeGoals.put(p, state.agents.get(objectPosition));
 
-			// 	System.err.println("found a object to be a agent at");
-			// 	System.err.println(objectPosition);
-			// 	System.err.println(state.agents.get(objectPosition));
+			// System.err.println("found a object to be a agent at");
+			// System.err.println(objectPosition);
+			// System.err.println(state.agents.get(objectPosition));
 			// }
 
 			System.err.println(path);
@@ -558,8 +573,9 @@ public class Agent {
 							fakeGoals.putAll(tmpGoals);
 						}
 
-
-						System.err.format("The object %s in pos %s can be moved to %s in state: \n %s \n",objectName,objectPosition,p,state);
+						System.err.format("The object %s in pos %s can be moved to %s in state: \n %s \n", objectName,
+								objectPosition, p, state);
+						fakeGoals.put(p, objectName);
 
 						// System.err.println("Here comes dat p & boxPosition");
 						// System.err.println(p);
@@ -576,7 +592,7 @@ public class Agent {
 					}
 				}
 			}
-			if(frontier.isEmpty())
+			if (frontier.isEmpty())
 				assert false;
 		}
 		return fakeGoals;
@@ -633,7 +649,8 @@ public class Agent {
 		}
 	}
 
-	// public static ArrayList<MAState> replaceActions(List<MAState> alreadyPlanned, List<MAState> newPlan)
+	// public static ArrayList<MAState> replaceActions(List<MAState> alreadyPlanned,
+	// List<MAState> newPlan)
 
 	public static ArrayList<MAState> extendSolution(List<MAState> alreadyPlanned, List<MAState> newPlan) {
 
@@ -717,7 +734,8 @@ public class Agent {
 
 	}
 
-	public static List<MAState> solveConflicts(List<MAState> alreadyPlanned, List<MAState> newPlan, char agent, int[]newActionsPlanned) {
+	public static List<MAState> solveConflicts(List<MAState> alreadyPlanned, List<MAState> newPlan, char agent,
+			int[] newActionsPlanned) {
 
 		// TODO:: Make it able to do NoOps in the middel of the solution instead of only
 		// in the begining
@@ -729,8 +747,8 @@ public class Agent {
 		int agentID = Character.getNumericValue(agent);
 
 		// adding a state to the end of newPlan with all NoOp actions
-		if(newPlan.size()<1)
-			return alreadyPlanned;	
+		if (newPlan.size() < 1)
+			return alreadyPlanned;
 
 		MAState last = newPlan.get(newPlan.size() - 1);
 		newPlan.add(new MAState(last, Collections.nCopies(numAgents, new Command.NoOp())));
@@ -747,7 +765,7 @@ public class Agent {
 
 		// int[] newActionsPerformed = new int[numAgents];
 
-		ArrayList<MAState> mergedPlan = new ArrayList<>(alreadyPlanned.subList(0, actionsPerformed[agentID]+1));
+		ArrayList<MAState> mergedPlan = new ArrayList<>(alreadyPlanned.subList(0, actionsPerformed[agentID] + 1));
 
 		MAState state = null;
 		List<Command> actions = null;
@@ -755,29 +773,28 @@ public class Agent {
 		int aPcount = actionsPerformed[agentID] + 1;
 		int newCount = 0;
 		int noOpNum = 0;
-		
+
 		while (true) {
-			
+
 			// System.err.format("i = %d newPlan.size() = %d alreadyPlanned.size() =
 			// %d\n",newCount,newPlan.size(),alreadyPlanned.size());
-			
-			if (newCount >= (newPlan.size()-1) && aPcount >= (alreadyPlanned.size()-1)) {
 
-				System.err.format("SolveConflicts found mergedPlan of size %d, via AlreadyPlanned of size %d and newPlan of %d\n",mergedPlan.size(),alreadyPlanned.size(),newPlan.size());
+			if (newCount >= (newPlan.size() - 1) && aPcount >= (alreadyPlanned.size() - 1)) {
 
+				System.err.format(
+						"SolveConflicts found mergedPlan of size %d, via AlreadyPlanned of size %d and newPlan of %d\n",
+						mergedPlan.size(), alreadyPlanned.size(), newPlan.size());
 
 				return mergedPlan;
 			}
 
-			if (aPcount < alreadyPlanned.size()){
+			if (aPcount < alreadyPlanned.size()) {
 				state = alreadyPlanned.get(aPcount);
 				aPcount++;
-			}
-			else {
+			} else {
 				// System.err.format("i>alreadyPlanned.size() and is %d\n",i);
 				state = new MAState(alreadyPlanned.get(0), Collections.nCopies(numAgents, new Command.NoOp()));
 			}
-
 
 			actions = new ArrayList<>(state.actions);
 
@@ -800,7 +817,7 @@ public class Agent {
 
 			} else if (!prevState.isApplicable(actions)) {
 
-				mergedPlan = new ArrayList<>(alreadyPlanned.subList(0, actionsPerformed[agentID]+1));
+				mergedPlan = new ArrayList<>(alreadyPlanned.subList(0, actionsPerformed[agentID] + 1));
 				aPcount = actionsPerformed[agentID] + 1;
 				newCount = 0;
 				newPlan.add(0, new MAState(newPlan.get(0), Collections.nCopies(numAgents, new Command.NoOp())));
@@ -919,12 +936,12 @@ public class Agent {
 
 				if (freshInitialState.boxAt(tempAgentPos)) {
 					objectPositions.add(tempAgentPos);
-					// System.err.format("%s add after %s by %d\n",tempAgentPos,action,i);
+					// System.err.format("box at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 
 				if (freshInitialState.agentAt(tempAgentPos)) {
 					objectPositions.add(tempAgentPos);
-					// System.err.format("%s add after %s by %d\n",tempAgentPos,action,i);
+					// System.err.format("agent at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 
 			}
@@ -938,12 +955,12 @@ public class Agent {
 
 				if (freshInitialState.boxAt(tempBoxPos)) {
 					objectPositions.add(tempBoxPos);
-					// System.err.format("%s add after %s by %d\n",tempBoxPos,action,i);
+					// System.err.format("box at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 
 				if (freshInitialState.agentAt(tempBoxPos)) {
 					objectPositions.add(tempBoxPos);
-					// System.err.format("%s add after %s by %d\n",tempBoxPos,action,i);
+					// System.err.format("agent at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 			}
 			if (action instanceof Command.Pull) {
@@ -955,22 +972,22 @@ public class Agent {
 
 				if (freshInitialState.boxAt(tempAgentPos)) {
 					objectPositions.add(tempAgentPos);
-					// System.err.format("%s add after %s by %d\n",tempAgentPos,action,i);
+					// System.err.format("box at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 
 				if (freshInitialState.agentAt(tempAgentPos)) {
 					objectPositions.add(tempAgentPos);
-					// System.err.format("%s add after %s by %d\n",tempAgentPos,action,i);
+					// System.err.format("agent at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 			}
 			List<Command> newActions = new ArrayList<>(Collections.nCopies(state.numAgents, new Command.NoOp()));
 			newActions.set(i, action);
 			// System.err.format("applying %s to \n%s\n",newActions,freshInitialState);
 			freshInitialState = new MAState(freshInitialState, newActions, true);
-			// System.err.format("freshInitialState now looks like \n
-			// %s\n",freshInitialState);
-			// System.err.format("after %s has been applyed. ObjectPositions is now %s
-			// \n",state.actions,objectPositions);
+			// System.err.format("freshInitialState now looks like
+			// \n%s\n",freshInitialState);
+			// System.err.format("after %s has been applyed. ObjectPositions is now
+			// %s\n",state.actions,objectPositions);
 		}
 		return objectPositions;
 	}

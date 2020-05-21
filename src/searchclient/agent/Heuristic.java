@@ -146,7 +146,7 @@ public abstract class Heuristic implements Comparator<MAState> {
 
         @Override
         public int f(MAState n) {
-            return n.g() + this.h(n);
+            return n.cost() + this.h(n);
         }
 
         @Override
@@ -165,7 +165,7 @@ public abstract class Heuristic implements Comparator<MAState> {
 
         @Override
         public int f(MAState n) {
-            return n.g() + this.W * this.h(n);
+            return n.cost() + this.W * this.h(n);
         }
 
         @Override

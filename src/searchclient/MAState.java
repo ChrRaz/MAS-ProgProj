@@ -7,6 +7,7 @@ import searchclient.util.Sets;
 
 public class MAState {
 	private static final Random RNG = new Random(1);
+	private static final int COSTINCREASE = 100;
 
 	public int numAgents;
 	public int height, width;
@@ -36,12 +37,14 @@ public class MAState {
 	public Set<Position> path;
 
 	private final int g;
+	private int cost;
 
 	public MAState(MAState parent, List<Command> actions) {
 		this.actions = new ArrayList<>(actions);
 		this.domain = parent.domain;
 		this.parent = parent;
 		this.g = parent.g() + 1;
+		this.cost = parent.cost + 1;
 		this.height = parent.height;
 		this.width = parent.width;
 		this.walls = parent.walls;
@@ -60,6 +63,7 @@ public class MAState {
 		this.parent = null;
 		this.actions = null;
 		this.g = 0;
+		this.cost =0;
 		this.width = width;
 		this.height = height;
 		this.walls = new HashSet<>();
@@ -76,6 +80,7 @@ public class MAState {
 		this.domain = parent.domain;
 		this.parent = parent;
 		this.g = parent.g() + 1;
+		this.cost = parent.cost + 1;
 		this.height = parent.height;
 		this.width = parent.width;
 		this.walls = parent.walls;
@@ -101,6 +106,7 @@ public class MAState {
 		else
 			this.parent = new MAState(state.parent);
 		this.g = state.g();
+		this.cost = state.cost;
 		this.height = state.height;
 		this.width = state.width;
 		this.walls = state.walls;
@@ -117,8 +123,22 @@ public class MAState {
 		return this.g;
 	}
 
+	public int cost() {
+		return this.cost;
+	}
+
 	public boolean isInitialState() {
 		return this.parent == null;
+	}
+
+	public Map<Position,Character> satisfiedGoals(){
+		Map<Position,Character> sGoals = new HashMap<>(this.goals);
+		for(Position pos : this.goals.keySet()){
+			if(!this.isGoalSatisfied(pos))
+				sGoals.remove(pos);
+		}
+
+		return sGoals;
 	}
 
 	public boolean isGoalState() {
@@ -668,6 +688,9 @@ public class MAState {
 				Position newAgentPos = agentPos.add(((Command.Move) command).getAgentDir());
 
 				assert this.cellIsFreeIgnore(newAgentPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+				if(!this.cellIsFree(newAgentPos)){
+					this.cost += COSTINCREASE;
+				}
 
 				this.agents.remove(agentPos);
 				this.agents.put(newAgentPos, agentType);
@@ -679,6 +702,10 @@ public class MAState {
 
 				assert this.boxAt(newAgentPos, agentColor) : String.format("Cannot apply %s to\n%s", actions, this.parent);
 				assert this.cellIsFreeIgnore(newBoxPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+
+				if(!this.cellIsFree(newBoxPos)){
+					this.cost += COSTINCREASE;
+				}
 
 				this.agents.remove(agentPos);
 				this.agents.put(newAgentPos, agentType);
@@ -693,6 +720,10 @@ public class MAState {
 
 				assert this.boxAt(boxPos, agentColor) : String.format("Cannot apply %s to\n%s", actions, this.parent);
 				assert this.cellIsFreeIgnore(newAgentPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+				
+				if(!this.cellIsFree(newAgentPos)){
+					this.cost += COSTINCREASE;
+				}
 
 				this.agents.remove(agentPos);
 				this.agents.put(newAgentPos, agentType);

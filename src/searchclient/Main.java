@@ -243,7 +243,7 @@ public class Main {
 				MAState state = maSolution.get(moves);
 
 				ArrayList<MAState> saSolution = Agent.search(agentType, maSolution.subList(moves, maSolution.size()),
-					new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)));
+					new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(state, agentColor,2)));
 
 				if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
 					fastestSASolution = saSolution;
@@ -329,7 +329,13 @@ public class Main {
 						continue;
 
 					int moves = actionsPerformed[agentId];
-					MAState state = maSolution.get(moves);
+					MAState state = maSolution.get(moves).clone();
+					
+					// removing goals that are not satisfied but not the goal we are looking for
+					Map<Position,Character> temp = state.satisfiedGoals();
+					state.goals.clear();
+					state.goals.putAll(temp);
+					state.goals.put(goalPos,goalType);
 					System.err.format("agent %s has done %d moves before search start\n",agent,moves);
 					List<MAState> saSolution = Agent.searchIgnore(agentType, maSolution,
 							new Strategy.StrategyBestFirst(new Heuristic.AStar(state, agentColor)), goalPos, actionsPerformed.clone(),Collections.emptySet());
@@ -448,7 +454,7 @@ public class Main {
 			if (subLevel.isSAState()){
 				Character agentType = subLevel.agents.values().iterator().next();
 				String agentColor = initialState.color.get(agentType);
-				Strategy.StrategyBestFirst strategy = new Strategy.StrategyBestFirst(new Heuristic.AStar(subLevel,agentColor));
+				Strategy.StrategyBestFirst strategy = new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(subLevel,agentColor,2));
 				subSolution = Agent.saSearch(subLevel, strategy);
 			}
 			else {
