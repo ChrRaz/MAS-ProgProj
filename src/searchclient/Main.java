@@ -210,6 +210,60 @@ public class Main {
 		return result;
 	}
 
+	public static List<Position> orderGoals(MAState initialState) {
+		LinkedHashSet<Position> explored = new LinkedHashSet<>();
+		PriorityQueue<Map.Entry<Position, Integer>> frontier = new PriorityQueue<>(Map.Entry.comparingByValue());
+
+		for (int i = 1; i < initialState.height - 1; i++) {
+			for (int j = 1; j < initialState.width - 1; j++) {
+				Position p = new Position(i, j);
+
+				if (!initialState.walls.contains(p)) {
+					int count = 4;
+
+					for (Command.Dir dir : Command.Dir.values()) {
+						if (initialState.walls.contains(p.add(dir)))
+							count--;
+					}
+					frontier.add(Map.entry(p, count));
+				}
+			}
+		}
+
+		while (!frontier.isEmpty()) {
+			Map.Entry<Position, Integer> entry = frontier.poll();
+			Position p = entry.getKey();
+
+			if (!p.within(0, 0, initialState.height, initialState.width))
+				continue;
+
+			if (explored.add(p)) {
+				System.err.println(entry);
+
+				for (Command.Dir dir : Command.Dir.values()) {
+					Position p2 = p.add(dir);
+
+					if (!initialState.walls.contains(p2)) {
+						int count = 4;
+
+						for (Command.Dir dir2 : Command.Dir.values()) {
+							Position p3 = p2.add(dir2);
+							if (explored.contains(p3) || initialState.walls.contains(p3)) {
+								count--;
+							}
+						}
+						frontier.add(Map.entry(p2, count));
+					}
+				}
+			}
+		}
+
+		ArrayList<Position> positions = new ArrayList<>(explored);
+		positions.retainAll(initialState.goals.keySet());
+
+		return positions;
+	}
+
 	public static List<MAState> maSolve(MAState initialState) { // :)
 		int numAgents = initialState.numAgents;
 
