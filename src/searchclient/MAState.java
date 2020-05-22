@@ -526,7 +526,7 @@ public class MAState {
 			Command com = this.actions.get(i);
 			char c = Integer.toString(i).charAt(0);
 			if (!(com instanceof Command.NoOp) && this.agents.get(this.getPositionOfAgent(c)) == null){
-				System.err.format("agent %d was missing in \n%s\n",i,this);
+				// System.err.format("agent %d was missing in \n%s\n",i,this);
 				return false;
 			}
 
@@ -534,7 +534,7 @@ public class MAState {
 			if (!(com2 instanceof Command.NoOp)) {
 				if (nextState.getPositionOfAgent(c) == null
 						|| nextState.agents.get(nextState.getPositionOfAgent(c)) == null){
-							System.err.format("agent %d was missing in \n%s\n",i,nextState);
+							// System.err.format("agent %d was missing in \n%s\n",i,nextState);
 							return false;
 						}
 			}
@@ -564,21 +564,21 @@ public class MAState {
 		// thisNew, thatNew,thisOld,thatOld);
 
 		if (!Sets.intersection(thisNew, thatNew).isEmpty()) {
-			System.err.println("thisNew and thatNew was not compatible");
+			// System.err.println("thisNew and thatNew was not compatible");
 			// System.err.format("thisNew: %s thatNew: %s this:\n%s\n that:
 			// \n%s\n",thisNew,thatNew,this,nextState);
 			return false;
 		}
 		if (!Sets.intersection(thisNew, thatOld).isEmpty()) {
-			System.err.println("thisNew and thatOld was not compatible");
+			// System.err.println("thisNew and thatOld was not compatible");
 			return false;
 		}
 		if (!Sets.intersection(thisOld, thatNew).isEmpty()) {
-			System.err.println("thisOld and thatNew was not compatible");
+			// System.err.println("thisOld and thatNew was not compatible");
 			return false;
 		}
 		if (!Sets.intersection(thisOld, thatOld).isEmpty()) {
-			System.err.println("thisOld and thatOld was not compatible");
+			// System.err.println("thisOld and thatOld was not compatible");
 			return false;
 		}
 		// System.err.format("isCompatible was true\n");
@@ -785,7 +785,7 @@ public class MAState {
 					this.backUpBoxes.putIfAbsent(newBoxPos, new ArrayList<>());
 					List<Character> backUp = this.backUpBoxes.get(newBoxPos);
 					if(backUp.size()>1)
-						System.err.println("backup is " + backUp + " in \n" + this);
+						// System.err.println("backup is " + backUp + " in \n" + this);
 					backUp.add(this.boxes.get(newBoxPos));
 				}
 				if(!this.cellIsFree(newBoxPos))

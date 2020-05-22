@@ -534,10 +534,11 @@ public class Main {
 			List<MAState> subSolution;
 
 			if (subLevel.isSAState()){
-				Character agentType = subLevel.agents.values().iterator().next();
-				String agentColor = initialState.color.get(agentType);
-				Strategy.StrategyBestFirst strategy = new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(subLevel,agentColor,2));
-				subSolution = Agent.saSearch(subLevel, strategy);
+				subSolution = maSolveIgnore(subLevel);
+				// Character agentType = subLevel.agents.values().iterator().next();
+				// String agentColor = initialState.color.get(agentType);
+				// Strategy.StrategyBestFirst strategy = new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(subLevel,agentColor,2));
+				// subSolution = Agent.saSearch(subLevel, strategy);
 			}
 			else {
 				subSolution = maSolveIgnore(subLevel);
