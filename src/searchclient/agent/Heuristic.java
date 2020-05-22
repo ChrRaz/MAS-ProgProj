@@ -46,8 +46,9 @@ public abstract class Heuristic implements Comparator<MAState> {
 
                 int row = p.getRow(), col = p.getCol();
 
-                if (p.within(0, 0, initialState.height - 1, initialState.width - 1) &&
-                        this.distToGoal.get(row).get(col).getOrDefault(g, Integer.MAX_VALUE) > dist && !initialState.walls.contains(p)) {
+                if (p.within(0, 0, initialState.height - 1, initialState.width - 1)
+                        && this.distToGoal.get(row).get(col).getOrDefault(g, Integer.MAX_VALUE) > dist
+                        && !initialState.walls.contains(p)) {
 
                     this.distToGoal.get(row).get(col).put(g, dist);
 
@@ -61,13 +62,13 @@ public abstract class Heuristic implements Comparator<MAState> {
 
         // Print the distance fields
         // for (Character c : this.chars) {
-        //     System.err.println(c);
-        //     System.err.println(this.distToGoal.stream().map(
-        //             row -> row.stream().map(
-        //                     x -> String.format("%3d", x.getOrDefault(c, 0))
-        //             ).collect(Collectors.joining(" "))
-        //     ).collect(Collectors.joining("\n")));
-        //     System.err.println();
+        // System.err.println(c);
+        // System.err.println(this.distToGoal.stream().map(
+        // row -> row.stream().map(
+        // x -> String.format("%3d", x.getOrDefault(c, 0))
+        // ).collect(Collectors.joining(" "))
+        // ).collect(Collectors.joining("\n")));
+        // System.err.println();
         // }
     }
 
@@ -78,8 +79,96 @@ public abstract class Heuristic implements Comparator<MAState> {
             Position agentPos = entry.getKey();
             Character a = entry.getValue();
 
-	        if (this.color.equals(n.color.get(a))) {
+            if (this.color.equals(n.color.get(a))) {
                 totalDistance += this.distToGoal.get(agentPos.getRow()).get(agentPos.getCol()).getOrDefault(a, 0);
+            }
+
+        }
+
+        // for (Map.Entry<Position, Character> entry : n.boxes.entrySet()) {
+        //     Position boxPos = entry.getKey();
+        //     Character b = entry.getValue();
+        //     if (this.color.equals(n.color.get(b))) {
+        //         totalDistance += this.distToGoal.get(boxPos.getRow()).get(boxPos.getCol()).getOrDefault(b, 0);
+        //     }
+
+        // }
+
+        // Group goals by type
+        Map<Character, List<Map.Entry<Position, Character>>> goals = n.goals.entrySet().stream().collect(Collectors.groupingBy(Map.Entry::getValue));
+        Map<Character, PriorityQueue<Integer>> boxDists = new HashMap<>();
+
+        for (Character goalType : goals.keySet()) {
+            boxDists.put(goalType, new PriorityQueue<>(Comparator.reverseOrder()));
+        }
+
+        // Find #goals closest boxes by repeatedly polling out the most expensive ones
+        for (Map.Entry<Position, Character> entry : n.boxes.entrySet()) {
+            Position boxPos = entry.getKey();
+            Character b = entry.getValue();
+
+            if (this.color.equals(n.color.get(b)) && boxDists.containsKey(b)) {
+                PriorityQueue<Integer> dists = boxDists.get(b);
+                // System.err.println("b is " + b);
+                dists.add(this.distToGoal.get(boxPos.getRow()).get(boxPos.getCol()).getOrDefault(b, 0));
+                if (dists.size() > goals.get(b).size())
+                    dists.poll();
+            }
+        }
+
+        for (PriorityQueue<Integer> dists : boxDists.values()) {
+            for (int dist : dists) {
+                totalDistance += dist;
+            }
+        }
+
+        for (Map.Entry<Position, Character> agent : n.agents.entrySet()) {
+            Position agentPos = agent.getKey();
+            Character agentType = agent.getValue();
+
+            int minAgentDist = Integer.MAX_VALUE;
+            if (!this.color.equals(n.color.get(agentType)))
+                continue;
+
+            for (Map.Entry<Position, Character> box : n.boxes.entrySet()) {
+                Position boxPos = box.getKey();
+                Character boxType = box.getValue();
+
+                if (!this.color.equals(n.color.get(boxType)))
+                    continue;
+
+                // box does not have a goal
+                if (!n.goals.containsValue(boxType))
+                    continue;
+
+                // Ignore boxes already on goals
+                if (n.goals.containsKey(boxPos) && n.goals.get(boxPos).equals(boxType))
+                    continue;
+
+                if (this.chars.contains(boxType) && n.color.get(agentType).equals(n.color.get(boxType))) {
+                    int dist = Position.distance(agentPos, boxPos);
+
+                    if (dist < minAgentDist)
+                        minAgentDist = dist;
+                }
+            }
+            if (minAgentDist != Integer.MAX_VALUE)
+                totalDistance += minAgentDist - 1;
+        }
+
+        return totalDistance;
+    }
+
+    public void printH(MAState n) {
+        int totalDistance = 0;
+
+        for (Map.Entry<Position, Character> entry : n.agents.entrySet()) {
+            Position agentPos = entry.getKey();
+            Character a = entry.getValue();
+
+            if (this.color.equals(n.color.get(a))) {
+                totalDistance += this.distToGoal.get(agentPos.getRow()).get(agentPos.getCol()).getOrDefault(a, 0);
+                
             }
 
         }
@@ -93,43 +182,45 @@ public abstract class Heuristic implements Comparator<MAState> {
 
         }
 
-        totalDistance += (this.numBoxes - n.boxes.size())*5;
-        totalDistance += (this.numAgents - n.agents.size());
+        // totalDistance += (this.numBoxes - n.boxes.size())*5;
+        // totalDistance += (this.numAgents - n.agents.size());
 
+        for (Map.Entry<Position, Character> agent : n.agents.entrySet()) {
+            Position agentPos = agent.getKey();
+            Character agentType = agent.getValue();
 
+            int minAgentDist = Integer.MAX_VALUE;
+            if (!this.color.equals(n.color.get(agentType)))
+                continue;
 
-        // int minAgentDist = Integer.MAX_VALUE;
-        // for (Map.Entry<Position, Character> agent : n.agents.entrySet()) {
-        //     Position agentPos = agent.getKey();
-        //     Character agentType = agent.getValue();
+            for (Map.Entry<Position, Character> box : n.boxes.entrySet()) {
+                Position boxPos = box.getKey();
+                Character boxType = box.getValue();
 
-        //     if (!this.color.equals(n.color.get(agentType)))
-        //         continue;
+                if (!this.color.equals(n.color.get(boxType)))
+                    continue;
 
-        //     for (Map.Entry<Position, Character> box : n.boxes.entrySet()) {
-        //         Position boxPos = box.getKey();
-        //         Character boxType = box.getValue();
+                // box does not have a goal
+                if (!n.goals.containsValue(boxType))
+                    continue;
 
-        //         if (!this.color.equals(n.color.get(boxType)))
-        //             continue;
+                // Ignore boxes already on goals
+                if (n.goals.containsKey(boxPos) && n.goals.get(boxPos).equals(boxType))
+                    continue;
 
-        //         // Ignore boxes already on goals
-        //         if (n.goals.containsKey(boxPos) && n.goals.get(boxPos).equals(boxType))
-        //             continue;
+                if (this.chars.contains(boxType) && n.color.get(agentType).equals(n.color.get(boxType))) {
+                    int dist = Position.distance(agentPos, boxPos);
 
-        //         if (this.chars.contains(boxType) && n.color.get(agentType).equals(n.color.get(boxType))) {
-        //             int dist = Position.distance(agentPos, boxPos);
-
-        //             if (dist < minAgentDist)
-        //                 minAgentDist = dist;
-        //         }
-        //     }
-        // }
-
-        // if (minAgentDist != Integer.MAX_VALUE)
-        //     totalDistance += minAgentDist - 1;
-
-        return totalDistance;
+                    if (dist < minAgentDist)
+                        minAgentDist = dist;
+                }
+            }
+            if (minAgentDist != Integer.MAX_VALUE){
+                System.err.format("Agent %s was %d from a box\n",agentType,minAgentDist);
+                
+                totalDistance += minAgentDist - 1;
+            }
+        }
     }
 
     public abstract int f(MAState n);
@@ -141,7 +232,7 @@ public abstract class Heuristic implements Comparator<MAState> {
 
     public static class AStar extends Heuristic {
         public AStar(MAState initialState, String color) {
-            super(initialState,color);
+            super(initialState, color);
         }
 
         @Override

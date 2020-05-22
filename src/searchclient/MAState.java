@@ -13,7 +13,8 @@ public class MAState {
 	public int height, width;
 	public final String domain;
 
-	// Arrays are indexed from the top-left of the level, with first index being row and second being column.
+	// Arrays are indexed from the top-left of the level, with first index being row
+	// and second being column.
 	// Row 0: (0,0) (0,1) (0,2) (0,3) ...
 	// Row 1: (1,0) (1,1) (1,2) (1,3) ...
 	// Row 2: (2,0) (2,1) (2,2) (2,3) ...
@@ -35,6 +36,8 @@ public class MAState {
 	public final List<Command> actions;
 
 	public Set<Position> path;
+	public TreeMap<Position,List<Character>> backUpBoxes;
+	public TreeMap<Position,List<Character>> backUpAgents;
 
 	private final int g;
 	private int cost;
@@ -50,6 +53,8 @@ public class MAState {
 		this.walls = parent.walls;
 		this.boxes = new TreeMap<>(parent.boxes);
 		this.goals = new HashMap<>(parent.goals);
+		this.backUpBoxes = new TreeMap<>(parent.backUpBoxes);
+		this.backUpAgents = new TreeMap<>(parent.backUpAgents);
 		this.fakeGoals = parent.fakeGoals;
 		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
@@ -63,11 +68,13 @@ public class MAState {
 		this.parent = null;
 		this.actions = null;
 		this.g = 0;
-		this.cost =0;
+		this.cost = 0;
 		this.width = width;
 		this.height = height;
 		this.walls = new HashSet<>();
 		this.boxes = new TreeMap<>();
+		this.backUpBoxes = new TreeMap<>();
+		this.backUpAgents = new TreeMap<>();
 		this.goals = new HashMap<>();
 		this.fakeGoals = new HashMap<>();
 		this.agents = new TreeMap<>();
@@ -86,6 +93,8 @@ public class MAState {
 		this.walls = parent.walls;
 		this.boxes = new TreeMap<>(parent.boxes);
 		this.goals = new HashMap<>(parent.goals);
+		this.backUpBoxes = new TreeMap<>(parent.backUpBoxes);
+		this.backUpAgents = new TreeMap<>(parent.backUpAgents);
 		this.fakeGoals = parent.fakeGoals;
 		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
@@ -95,13 +104,13 @@ public class MAState {
 	}
 
 	// helper function to clone
-	private MAState(MAState state){
-		if(state.actions==null)
+	private MAState(MAState state) {
+		if (state.actions == null)
 			this.actions = null;
 		else
 			this.actions = new ArrayList<>(state.actions);
 		this.domain = state.domain;
-		if(state.parent==null)
+		if (state.parent == null)
 			this.parent = null;
 		else
 			this.parent = new MAState(state.parent);
@@ -131,10 +140,10 @@ public class MAState {
 		return this.parent == null;
 	}
 
-	public Map<Position,Character> satisfiedGoals(){
-		Map<Position,Character> sGoals = new HashMap<>(this.goals);
-		for(Position pos : this.goals.keySet()){
-			if(!this.isGoalSatisfied(pos))
+	public Map<Position, Character> satisfiedGoals() {
+		Map<Position, Character> sGoals = new HashMap<>(this.goals);
+		for (Position pos : this.goals.keySet()) {
+			if (!this.isGoalSatisfied(pos))
 				sGoals.remove(pos);
 		}
 
@@ -310,8 +319,7 @@ public class MAState {
 		// throw new RuntimeException("Agent not found: " + agent);
 	}
 
-
-	public ArrayList<MAState> getExpandedStatesIgnore(char agent) {
+	public ArrayList<MAState> getExpandedStatesIgnore(char agent, MAState nextState) {
 		Position agentPos = this.getPositionOfAgent(agent);
 		String agentColor = this.color.get(agent);
 
@@ -322,7 +330,8 @@ public class MAState {
 			Position newAgentPos = agentPos.add(agentDir);
 
 			if (this.cellIsFreeIgnore(newAgentPos)) {
-				ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(this.numAgents, new Command.NoOp()));
+				ArrayList<Command> otherCommands = new ArrayList<>(
+						Collections.nCopies(this.numAgents, new Command.NoOp()));
 				otherCommands.set(Character.getNumericValue(agent), new Command.Move(agentDir));
 
 				MAState newState = new MAState(this, otherCommands, true);
@@ -344,7 +353,8 @@ public class MAState {
 
 					// Check if there's something on the cell to which the agent is moving
 					if (this.cellIsFreeIgnore(newBoxPos) && !newBoxPos.equals(agentPos)) {
-						ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(this.numAgents, new Command.NoOp()));
+						ArrayList<Command> otherCommands = new ArrayList<>(
+								Collections.nCopies(this.numAgents, new Command.NoOp()));
 						otherCommands.set(Character.getNumericValue(agent), new Command.Push(agentDir, boxDir));
 
 						MAState newState = new MAState(this, otherCommands, true);
@@ -366,7 +376,8 @@ public class MAState {
 					Position newAgentPos = agentPos.add(agentDir);
 
 					if (this.cellIsFreeIgnore(newAgentPos) && !newAgentPos.equals(boxPos)) {
-						ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(this.numAgents, new Command.NoOp()));
+						ArrayList<Command> otherCommands = new ArrayList<>(
+								Collections.nCopies(this.numAgents, new Command.NoOp()));
 						otherCommands.set(Character.getNumericValue(agent), new Command.Pull(agentDir, boxDir));
 
 						MAState newState = new MAState(this, otherCommands, true);
@@ -385,8 +396,30 @@ public class MAState {
 		expandedStates.add(newState);
 		// Kommer sikkert til at fucke massivt med DFS og Greedy lol
 
-		Collections.shuffle(expandedStates, RNG);
-		return expandedStates;
+		// Applying the actions of the next state.
+		ArrayList<MAState> expandedStates2 = new ArrayList<>();
+		int agentID = Character.getNumericValue(agent);
+
+		// System.err.println("nextState.actions = " + nextState.actions);
+
+		for (MAState state : expandedStates) {
+
+			if (state.isCompatible(nextState)) {
+
+				List<Command> actionCopy = new ArrayList<>(nextState.actions);
+				actionCopy.set(agentID, state.actions.get(agentID));
+				Set<Position> temp = new HashSet<>(state.path);
+				state = new MAState(state.parent, actionCopy, true);
+
+				// state.goals.putAll(initialState.goals);
+				state.path = temp;
+				// System.err.format("could apply %s to \n%s\n and got
+				// \n%s\n",state.actions,leafState.parent, leafState);
+				expandedStates2.add(state);
+			}
+		}
+		Collections.shuffle(expandedStates2, RNG);
+		return expandedStates2;
 	}
 
 	public boolean cellIsFree(Position pos) {
@@ -396,7 +429,6 @@ public class MAState {
 	public boolean cellIsFreeIgnore(Position pos) {
 		return !this.walls.contains(pos);
 	}
-
 
 	public boolean boxAt(Position pos) {
 		return this.boxes.containsKey(pos);
@@ -470,40 +502,45 @@ public class MAState {
 		return true;
 	}
 
-	public boolean isCompatible(MAState nextState){
+	public boolean isCompatible(MAState nextState) {
 
 		// if(this.extractPlan().size()>10 && nextState.extractPlan().size()>10){
-		// 	System.err.println("extractPlan from this");
-		// 	for( MAState state : this.extractPlan().subList(this.extractPlan().size()-5, this.extractPlan().size()))
-		// 		System.err.format("%s  actions: %s\n",state,state.actions);
+		// System.err.println("extractPlan from this");
+		// for( MAState state : this.extractPlan().subList(this.extractPlan().size()-5,
+		// this.extractPlan().size()))
+		// System.err.format("%s actions: %s\n",state,state.actions);
 
-		// 	System.err.println("extractPlan from nextState");
-		// 	for( MAState state : nextState.extractPlan().subList(nextState.extractPlan().size()-5, nextState.extractPlan().size()))
-		// 		System.err.format("%s actions: %s\n",state,state.actions);
+		// System.err.println("extractPlan from nextState");
+		// for( MAState state :
+		// nextState.extractPlan().subList(nextState.extractPlan().size()-5,
+		// nextState.extractPlan().size()))
+		// System.err.format("%s actions: %s\n",state,state.actions);
 		// }
 
-
-		for(int i = 0 ; i<this.numAgents; i++){
+		for (int i = 0; i < this.numAgents; i++) {
 			Command com = this.actions.get(i);
 			char c = Integer.toString(i).charAt(0);
-			if(!(com instanceof Command.NoOp) && this.agents.get(this.getPositionOfAgent(c))==null)
+			if (!(com instanceof Command.NoOp) && this.agents.get(this.getPositionOfAgent(c)) == null)
 				return false;
 
 			Command com2 = nextState.actions.get(i);
-			if(!(com2 instanceof Command.NoOp)){
-				if(nextState.getPositionOfAgent(c) == null || nextState.agents.get(nextState.getPositionOfAgent(c))==null)
-				return false;
+			if (!(com2 instanceof Command.NoOp)) {
+				if (nextState.getPositionOfAgent(c) == null
+						|| nextState.agents.get(nextState.getPositionOfAgent(c)) == null)
+					return false;
 			}
 		}
 		// if(!this.parent.isApplicable(this.actions)){
-		// 	System.err.format("%s could not be applied to \n%s\n",this.actions,this.parent);
-		// 	assert false;
+		// System.err.format("%s could not be applied to
+		// \n%s\n",this.actions,this.parent);
+		// assert false;
 		// }
 		// if(!nextState.parent.isApplicable(nextState.actions)){
-		// 	assert false;
+		// assert false;
 		// }
 
-		// System.err.format("this has %s actions and is \n%s\n nextState has %s actions and is \n%s\n",this.actions,this,nextState.actions,nextState);
+		// System.err.format("this has %s actions and is \n%s\n nextState has %s actions
+		// and is \n%s\n",this.actions,this,nextState.actions,nextState);
 
 		Set<Position> thisNew = this.getNewPositions();
 		// System.err.println("getting thatNew");
@@ -513,31 +550,34 @@ public class MAState {
 		// System.err.println("getting thatOld");
 		Set<Position> thatOld = nextState.getOldPositions();
 		// System.err.println("got thatOld");
-		// System.err.format("this.actions %s  nextState.actions %s\n",this.actions,nextState.actions);
-		// System.err.format("thisNew: %s  thatNew: %s  thisOld: %s  thatOld: %s\n", thisNew, thatNew,thisOld,thatOld);
+		// System.err.format("this.actions %s nextState.actions
+		// %s\n",this.actions,nextState.actions);
+		// System.err.format("thisNew: %s thatNew: %s thisOld: %s thatOld: %s\n",
+		// thisNew, thatNew,thisOld,thatOld);
 
-		if(!Sets.intersection(thisNew,thatNew).isEmpty()){
-			System.err.println("thisNew and thatNew was not compatible");
-			System.err.format("thisNew: %s    thatNew: %s  this:\n%s\n that: \n%s\n",thisNew,thatNew,this,nextState);	
+		if (!Sets.intersection(thisNew, thatNew).isEmpty()) {
+			// System.err.println("thisNew and thatNew was not compatible");
+			// System.err.format("thisNew: %s thatNew: %s this:\n%s\n that:
+			// \n%s\n",thisNew,thatNew,this,nextState);
 			return false;
 		}
-		if(!Sets.intersection(thisNew,thatOld).isEmpty()){
-			System.err.println("thisNew and thatOld was not compatible");	
+		if (!Sets.intersection(thisNew, thatOld).isEmpty()) {
+			// System.err.println("thisNew and thatOld was not compatible");
 			return false;
 		}
-		if(!Sets.intersection(thisOld,thatNew).isEmpty()){
-			System.err.println("thisOld and thatNew was not compatible");	
+		if (!Sets.intersection(thisOld, thatNew).isEmpty()) {
+			// System.err.println("thisOld and thatNew was not compatible");
 			return false;
 		}
-		if(!Sets.intersection(thisOld,thatOld).isEmpty()){
-			System.err.println("thisOld and thatOld was not compatible");	
+		if (!Sets.intersection(thisOld, thatOld).isEmpty()) {
+			// System.err.println("thisOld and thatOld was not compatible");
 			return false;
 		}
 
 		return true;
 	}
 
-	public char getCell(Position pos){
+	public char getCell(Position pos) {
 		if (this.agents.containsKey(pos)) {
 			return this.agents.get(pos);
 		} else if (this.boxAt(pos)) {
@@ -549,7 +589,7 @@ public class MAState {
 		}
 	}
 
-	public Set<Position> getOldPositions(){
+	public Set<Position> getOldPositions() {
 		MAState parent = this.parent;
 		Set<Position> oldPositions = new HashSet<>();
 		// System.err.format("parent agents is %s\n",parent.agents.entrySet());
@@ -585,7 +625,7 @@ public class MAState {
 		return oldPositions;
 	}
 
-	public Set<Position> getNewPositions(){
+	public Set<Position> getNewPositions() {
 		MAState parent = this.parent;
 		Set<Position> newPositions = new HashSet<>();
 
@@ -647,7 +687,8 @@ public class MAState {
 				Position newBoxPos = boxPos.add(((Command.Push) command).getBoxDir());
 				String agentColor = this.color.get(agentType);
 
-				assert this.boxAt(newAgentPos, agentColor) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+				assert this.boxAt(newAgentPos, agentColor) : String.format("Cannot apply %s to\n%s", actions,
+						this.parent);
 				assert this.cellIsFree(newBoxPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
 
 				this.agents.remove(agentPos);
@@ -687,23 +728,57 @@ public class MAState {
 			if (command instanceof Command.Move) {
 				Position newAgentPos = agentPos.add(((Command.Move) command).getAgentDir());
 
-				assert this.cellIsFreeIgnore(newAgentPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
-				if(!this.cellIsFree(newAgentPos)){
+				assert this.cellIsFreeIgnore(newAgentPos) : String.format("Cannot apply %s to\n%s", actions,
+						this.parent);
+
+				// Backing up agent at newAgentPos
+				if (this.agentAt(newAgentPos)) {
+					this.backUpAgents.putIfAbsent(newAgentPos, new ArrayList<>());
+					List<Character> backUp = this.backUpAgents.get(newAgentPos);
+					backUp.add(this.agents.get(newAgentPos));
 					this.cost += COSTINCREASE;
 				}
 
 				this.agents.remove(agentPos);
 				this.agents.put(newAgentPos, agentType);
 
+				// Adding backup agent at agentPos
+				if (this.backUpAgents.containsKey(agentPos) && !this.backUpAgents.get(agentPos).isEmpty()) {
+					List<Character> backUp = this.backUpAgents.get(agentPos);
+					Character backUpAgent = backUp.remove(0);
+					this.agents.put(agentPos,backUpAgent);
+					// backUp.add(this.agents.get(newAgentPos));
+					// this.cost += COSTINCREASE;
+				}
+
 			} else if (command instanceof Command.Push) {
 				Position newAgentPos = agentPos.add(((Command.Push) command).getAgentDir());
 				Position newBoxPos = newAgentPos.add(((Command.Push) command).getBoxDir());
 				String agentColor = this.color.get(agentType);
 
-				assert this.boxAt(newAgentPos, agentColor) : String.format("Cannot apply %s to\n%s", actions, this.parent);
+				assert this.boxAt(newAgentPos, agentColor) : String.format("Cannot apply %s to\n%s", actions,
+						this.parent);
 				assert this.cellIsFreeIgnore(newBoxPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
 
-				if(!this.cellIsFree(newBoxPos)){
+				// if (!this.cellIsFree(newBoxPos)) {
+				// 	this.cost += COSTINCREASE;
+				// }
+
+				// Backing up agent at newAgentPos
+				if (this.agentAt(newAgentPos)) {
+					this.backUpAgents.putIfAbsent(newAgentPos, new ArrayList<>());
+					List<Character> backUp = this.backUpAgents.get(newAgentPos);
+					backUp.add(this.agents.get(newAgentPos));
+					this.cost += COSTINCREASE;
+				}
+
+				// Backing up box at newBoxPos
+				if (this.boxAt(newBoxPos)) {
+					this.backUpBoxes.putIfAbsent(newBoxPos, new ArrayList<>());
+					List<Character> backUp = this.backUpBoxes.get(newBoxPos);
+					if(backUp.size()>1)
+						System.err.println("backup is " + backUp + " in \n" + this);
+					backUp.add(this.boxes.get(newBoxPos));
 					this.cost += COSTINCREASE;
 				}
 
@@ -713,15 +788,50 @@ public class MAState {
 				Character box = this.boxes.remove(newAgentPos);
 				this.boxes.put(newBoxPos, box);
 
+				// Adding backup agent at agentPos
+				if (this.backUpAgents.containsKey(agentPos) && !this.backUpAgents.get(agentPos).isEmpty()) {
+					List<Character> backUp = this.backUpAgents.get(agentPos);
+					Character backUpAgent = backUp.remove(0);
+					this.agents.put(agentPos,backUpAgent);
+					// backUp.add(this.agents.get(newAgentPos));
+					// this.cost += COSTINCREASE;
+				}
+
+				// Adding backup box at newAgentPos
+				if (this.backUpAgents.containsKey(newAgentPos) && !this.backUpAgents.get(newAgentPos).isEmpty()) {
+					List<Character> backUp = this.backUpAgents.get(newAgentPos);
+					Character backUpAgent = backUp.remove(0);
+					this.boxes.put(newAgentPos,backUpAgent);
+					// backUp.add(this.agents.get(newAgentPos));
+					// this.cost += COSTINCREASE;
+				}
+
 			} else if (command instanceof Command.Pull) {
 				Position boxPos = agentPos.add(((Command.Pull) command).getBoxDir());
 				Position newAgentPos = agentPos.add(((Command.Pull) command).getAgentDir());
 				String agentColor = this.color.get(agentType);
 
 				assert this.boxAt(boxPos, agentColor) : String.format("Cannot apply %s to\n%s", actions, this.parent);
-				assert this.cellIsFreeIgnore(newAgentPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
-				
-				if(!this.cellIsFree(newAgentPos)){
+				assert this.cellIsFreeIgnore(newAgentPos) : String.format("Cannot apply %s to\n%s", actions,
+						this.parent);
+
+				// if (!this.cellIsFree(newAgentPos)) {
+				// 	this.cost += COSTINCREASE;
+				// }
+
+				// Backing up agent at newAgentPos
+				if (this.agentAt(newAgentPos)) {
+					this.backUpAgents.putIfAbsent(newAgentPos, new ArrayList<>());
+					List<Character> backUp = this.backUpAgents.get(newAgentPos);
+					backUp.add(this.agents.get(newAgentPos));
+					this.cost += COSTINCREASE;
+				}
+
+				// Backing up box at agentPos
+				if (this.boxAt(agentPos)) {
+					this.backUpBoxes.putIfAbsent(agentPos, new ArrayList<>());
+					List<Character> backUp = this.backUpBoxes.get(agentPos);
+					backUp.add(this.boxes.get(agentPos));
 					this.cost += COSTINCREASE;
 				}
 
@@ -731,22 +841,39 @@ public class MAState {
 				Character box = this.boxes.remove(boxPos);
 				this.boxes.put(agentPos, box);
 
+				// Adding backup agent at agentPos
+				if (this.backUpAgents.containsKey(agentPos) && !this.backUpAgents.get(agentPos).isEmpty()) {
+					List<Character> backUp = this.backUpAgents.get(agentPos);
+					Character backUpAgent = backUp.remove(0);
+					this.agents.put(agentPos,backUpAgent);
+					// backUp.add(this.agents.get(newAgentPos));
+					// this.cost += COSTINCREASE;
+				}
+
+				// Adding backup box at boxPos
+				if (this.backUpAgents.containsKey(boxPos) && !this.backUpAgents.get(boxPos).isEmpty()) {
+					List<Character> backUp = this.backUpAgents.get(boxPos);
+					Character backUpAgent = backUp.remove(0);
+					this.boxes.put(boxPos,backUpAgent);
+					// backUp.add(this.agents.get(newAgentPos));
+					// this.cost += COSTINCREASE;
+				}
+
 			}
 		}
 	}
 
-
 	public MAState clone() {
 		return new MAState(this);
 	}
-
 
 	public boolean isSAState() {
 		return this.agents.size() == 1;
 	}
 
 	public void wallifyBoxes() {
-		Set<String> agentColors = this.color.entrySet().stream().filter(entry -> Character.isDigit(entry.getKey())).map(Map.Entry::getValue).collect(Collectors.toSet());
+		Set<String> agentColors = this.color.entrySet().stream().filter(entry -> Character.isDigit(entry.getKey()))
+				.map(Map.Entry::getValue).collect(Collectors.toSet());
 		TreeMap<Position, Character> boxes = new TreeMap<>(this.boxes);
 
 		for (Map.Entry<Position, Character> box : boxes.entrySet()) {
@@ -810,11 +937,11 @@ public class MAState {
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 
-		s.append(" ");
+		s.append("  ");
 		for (int col = 0; col < this.width; col++) {
 			s.append(col % 10);
 		}
-		s.append("  |  ");
+		s.append(" |   ");
 		for (int col = 0; col < this.width; col++) {
 			s.append(col % 10);
 		}

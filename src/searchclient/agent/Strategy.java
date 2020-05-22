@@ -157,7 +157,7 @@ public abstract class Strategy {
     public static class StrategyBestFirst extends Strategy {
         private PriorityQueue<MAState> frontier;
         private HashSet<MAState> frontierSet;
-        private Heuristic heuristic;
+        public Heuristic heuristic;
 
         public StrategyBestFirst(Heuristic h) {
             super();
@@ -196,7 +196,7 @@ public abstract class Strategy {
 
         @Override
         public String describeState(MAState n) {
-            return String.format("[f: %d, g: %d, h: %d]", this.heuristic.f(n), n.g(), this.heuristic.h(n));
+            return String.format("[f: %d, g: %d, h: %d, cost: %d]", this.heuristic.f(n), n.g(), this.heuristic.h(n),n.cost());
         }
 
         @Override
