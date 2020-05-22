@@ -115,6 +115,8 @@ public class MAState {
 		else
 			this.parent = new MAState(state.parent);
 		this.g = state.g();
+		this.backUpBoxes = new TreeMap<>(state.backUpBoxes);
+		this.backUpAgents = new TreeMap<>(state.backUpAgents);
 		this.cost = state.cost;
 		this.height = state.height;
 		this.width = state.width;
@@ -417,6 +419,9 @@ public class MAState {
 				// \n%s\n",state.actions,leafState.parent, leafState);
 				expandedStates2.add(state);
 			}
+			else{
+				// System.err.format("State was not compatible with nextState\n");
+			}
 		}
 		Collections.shuffle(expandedStates2, RNG);
 		return expandedStates2;
@@ -516,18 +521,22 @@ public class MAState {
 		// nextState.extractPlan().size()))
 		// System.err.format("%s actions: %s\n",state,state.actions);
 		// }
-
+		// System.err.format("Checking for missing agents")
 		for (int i = 0; i < this.numAgents; i++) {
 			Command com = this.actions.get(i);
 			char c = Integer.toString(i).charAt(0);
-			if (!(com instanceof Command.NoOp) && this.agents.get(this.getPositionOfAgent(c)) == null)
+			if (!(com instanceof Command.NoOp) && this.agents.get(this.getPositionOfAgent(c)) == null){
+				System.err.format("agent %d was missing in \n%s\n",i,this);
 				return false;
+			}
 
 			Command com2 = nextState.actions.get(i);
 			if (!(com2 instanceof Command.NoOp)) {
 				if (nextState.getPositionOfAgent(c) == null
-						|| nextState.agents.get(nextState.getPositionOfAgent(c)) == null)
-					return false;
+						|| nextState.agents.get(nextState.getPositionOfAgent(c)) == null){
+							System.err.format("agent %d was missing in \n%s\n",i,nextState);
+							return false;
+						}
 			}
 		}
 		// if(!this.parent.isApplicable(this.actions)){
@@ -550,30 +559,29 @@ public class MAState {
 		// System.err.println("getting thatOld");
 		Set<Position> thatOld = nextState.getOldPositions();
 		// System.err.println("got thatOld");
-		// System.err.format("this.actions %s nextState.actions
-		// %s\n",this.actions,nextState.actions);
+		// System.err.format("this.actions %s nextState.actions %s\n",this.actions,nextState.actions);
 		// System.err.format("thisNew: %s thatNew: %s thisOld: %s thatOld: %s\n",
 		// thisNew, thatNew,thisOld,thatOld);
 
 		if (!Sets.intersection(thisNew, thatNew).isEmpty()) {
-			// System.err.println("thisNew and thatNew was not compatible");
+			System.err.println("thisNew and thatNew was not compatible");
 			// System.err.format("thisNew: %s thatNew: %s this:\n%s\n that:
 			// \n%s\n",thisNew,thatNew,this,nextState);
 			return false;
 		}
 		if (!Sets.intersection(thisNew, thatOld).isEmpty()) {
-			// System.err.println("thisNew and thatOld was not compatible");
+			System.err.println("thisNew and thatOld was not compatible");
 			return false;
 		}
 		if (!Sets.intersection(thisOld, thatNew).isEmpty()) {
-			// System.err.println("thisOld and thatNew was not compatible");
+			System.err.println("thisOld and thatNew was not compatible");
 			return false;
 		}
 		if (!Sets.intersection(thisOld, thatOld).isEmpty()) {
-			// System.err.println("thisOld and thatOld was not compatible");
+			System.err.println("thisOld and thatOld was not compatible");
 			return false;
 		}
-
+		// System.err.format("isCompatible was true\n");
 		return true;
 	}
 
@@ -736,8 +744,9 @@ public class MAState {
 					this.backUpAgents.putIfAbsent(newAgentPos, new ArrayList<>());
 					List<Character> backUp = this.backUpAgents.get(newAgentPos);
 					backUp.add(this.agents.get(newAgentPos));
-					this.cost += COSTINCREASE;
 				}
+				if(!this.cellIsFree(newAgentPos))
+					this.cost += COSTINCREASE;
 
 				this.agents.remove(agentPos);
 				this.agents.put(newAgentPos, agentType);
@@ -769,7 +778,6 @@ public class MAState {
 					this.backUpAgents.putIfAbsent(newAgentPos, new ArrayList<>());
 					List<Character> backUp = this.backUpAgents.get(newAgentPos);
 					backUp.add(this.agents.get(newAgentPos));
-					this.cost += COSTINCREASE;
 				}
 
 				// Backing up box at newBoxPos
@@ -779,8 +787,9 @@ public class MAState {
 					if(backUp.size()>1)
 						System.err.println("backup is " + backUp + " in \n" + this);
 					backUp.add(this.boxes.get(newBoxPos));
-					this.cost += COSTINCREASE;
 				}
+				if(!this.cellIsFree(newBoxPos))
+					this.cost += COSTINCREASE;
 
 				this.agents.remove(agentPos);
 				this.agents.put(newAgentPos, agentType);
@@ -815,16 +824,16 @@ public class MAState {
 				assert this.cellIsFreeIgnore(newAgentPos) : String.format("Cannot apply %s to\n%s", actions,
 						this.parent);
 
-				// if (!this.cellIsFree(newAgentPos)) {
-				// 	this.cost += COSTINCREASE;
-				// }
+				if (!this.cellIsFree(newAgentPos)) {
+					this.cost += COSTINCREASE;
+				}
 
 				// Backing up agent at newAgentPos
 				if (this.agentAt(newAgentPos)) {
 					this.backUpAgents.putIfAbsent(newAgentPos, new ArrayList<>());
 					List<Character> backUp = this.backUpAgents.get(newAgentPos);
 					backUp.add(this.agents.get(newAgentPos));
-					this.cost += COSTINCREASE;
+					// this.cost += COSTINCREASE;
 				}
 
 				// Backing up box at agentPos
@@ -832,7 +841,7 @@ public class MAState {
 					this.backUpBoxes.putIfAbsent(agentPos, new ArrayList<>());
 					List<Character> backUp = this.backUpBoxes.get(agentPos);
 					backUp.add(this.boxes.get(agentPos));
-					this.cost += COSTINCREASE;
+					// this.cost += COSTINCREASE;
 				}
 
 				this.agents.remove(agentPos);

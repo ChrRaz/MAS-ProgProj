@@ -407,6 +407,9 @@ public class Main {
 
 					int moves = actionsPerformed[agentId];
 					MAState state = maSolution.get(moves).clone();
+					System.err.format("actionsPerformed: %s maSolution.size()= %d\n", Arrays.toString(actionsPerformed), maSolution.size());
+					if(maSolution.size()>5)
+					System.err.format("the second to last actions is %s and the last actions is %s\n",maSolution.get(maSolution.size()-2).actions,maSolution.get(maSolution.size()-1).actions);
 					
 					// removing goals that are not satisfied but not the goal we are looking for
 					Map<Position,Character> temp = state.satisfiedGoals();
@@ -416,7 +419,7 @@ public class Main {
 					System.err.println("heuristic knows of the goals " + state.goals);
 					System.err.format("agent %s has done %d moves before search start\n",agent,moves);
 					List<MAState> saSolution = Agent.searchIgnore(agentType, maSolution,
-							new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(state, agentColor,2)), goalPos, actionsPerformed.clone(),Collections.emptySet());
+							new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(state, agentColor,2,goalType)), goalPos, actionsPerformed.clone(),Collections.emptySet());
 					System.err.format("agent %s has solve goal %s at %s with %d moves\n",agent, goalPos, goalType, saSolution.size());
 					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
 						fastestSASolution = saSolution;
@@ -427,7 +430,6 @@ public class Main {
 				// System.err.format("goal now look like %s and last state looks like \n%s \n",initialState.goals.entrySet(),fastestSASolution.get(fastestSASolution.size()-1));
 				
 				assert fastestSASolution != null : "could not find solution for goal at " + goalPos;// :)
-				actionsPerformed = Agent.planToActions(fastestSASolution);
 				
 				System.err.printf("Fastest agent was (%d) with %d moves\n", fastestAgent, fastestSASolution.size() - 1);
 				// System.err.println(fastestSASolution.get(fastestSASolution.size() - 1));
@@ -444,6 +446,7 @@ public class Main {
 					List<Command> actions = maSolution.get(lastState.g() + 1).actions;
 					fastestSASolution.add(new MAState(lastState, actions));
 				}
+				actionsPerformed = Agent.planToActions(fastestSASolution);
 				maSolution = fastestSASolution;
 				System.err.println(maSolution.get(maSolution.size() - 1));
 			}
