@@ -135,6 +135,18 @@ public abstract class Heuristic implements Comparator<MAState> {
             }
         }
 
+
+        // for (Character goalType : goals.keySet()) {
+        //     PriorityQueue<Integer> dists = boxDists.get(goalType);
+
+        //     for(int i=0;i<dists.size() - goals.get(goalType).size();i++){
+        //         dists.poll();
+        //     }
+        // }
+
+
+
+
         for (PriorityQueue<Integer> dists : boxDists.values()) {
             for (int dist : dists) {
                 totalDistance += dist;

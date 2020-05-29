@@ -226,6 +226,15 @@ public class Main {
 						if (initialState.walls.contains(p.add(dir)))
 							count--;
 					}
+					int agentExtra = 0;
+					if(initialState.goals.containsKey(p)){
+						Character goalType = initialState.goals.get(p);
+						if(initialState.agents.values().contains(goalType))
+						agentExtra -= 100000;
+					}
+						
+
+
 					int dist2Agent = 0;
 					if(initialState.goals.containsKey(p)){
 						int temp = 1000;
@@ -234,12 +243,12 @@ public class Main {
 						}
 						dist2Agent -= temp;
 					}
-					frontier.add(Map.entry(p, count*10000 + dist2Agent));
+					frontier.add(Map.entry(p, count*10000 + dist2Agent + agentExtra));
 				}
 			}
 		}
 
-		System.err.println(frontier);
+		// System.err.println(frontier);
 
 		while (!frontier.isEmpty()) {
 			Map.Entry<Position, Integer> entry = frontier.poll();
@@ -249,7 +258,7 @@ public class Main {
 				continue;
 
 			if (explored.add(p)) {
-				System.err.println(entry);
+				// System.err.println(entry);
 
 				for (Command.Dir dir : Command.Dir.values()) {
 					Position p2 = p.add(dir);
@@ -263,6 +272,12 @@ public class Main {
 								count--;
 							}
 						}
+						int agentExtra = 0;
+						if(initialState.goals.containsKey(p)){
+							Character goalType = initialState.goals.get(p);
+							if(initialState.agents.values().contains(goalType))
+							agentExtra -= 100000;
+						}
 						int dist2Agent = 0;
 						if(initialState.goals.containsKey(p2)){
 							int temp = 1000;
@@ -271,7 +286,7 @@ public class Main {
 							}
 							dist2Agent -= temp;
 						}
-						frontier.add(Map.entry(p2, count*10000 + dist2Agent));// M²
+						frontier.add(Map.entry(p2, count*10000 + dist2Agent+agentExtra));// M²
 					}
 				}
 			}
@@ -367,21 +382,21 @@ public class Main {
 
 			
 			
-			System.err.printf("Moves: %s\n", Arrays.toString(actionsPerformed));
+			// System.err.printf("Moves: %s\n", Arrays.toString(actionsPerformed));
 			
-			System.err.println("Goal order is:");
+			// System.err.println("Goal order is:");
 			for(Position goalPos : orderGoals(initialState)){
 				char goalType = initialState.goals.get(goalPos);
 				System.err.println(goalPos + " = " + goalType);
 			}
 				
 			for (Position goalPos : orderGoals(initialState)) {
-				System.err.println("initialState.goals = " + initialState.goals);
+				// System.err.println("initialState.goals = " + initialState.goals);
 				char goalType = initialState.goals.get(goalPos);
 				if(maSolution.get(maSolution.size()-1).isGoalSatisfied(goalPos))
 				continue;
 				
-				System.err.format("goalPos at %s\n", goalPos);
+				// System.err.format("goalPos at %s\n", goalPos);
 				
 				// Find single agent-goal pair such that agent fills goal fastest
 				List<MAState> fastestSASolution = null;
@@ -407,20 +422,20 @@ public class Main {
 
 					int moves = actionsPerformed[agentId];
 					MAState state = maSolution.get(moves).clone();
-					System.err.format("actionsPerformed: %s maSolution.size()= %d\n", Arrays.toString(actionsPerformed), maSolution.size());
-					if(maSolution.size()>5)
-					System.err.format("the second to last actions is %s and the last actions is %s\n",maSolution.get(maSolution.size()-2).actions,maSolution.get(maSolution.size()-1).actions);
+					// System.err.format("actionsPerformed: %s maSolution.size()= %d\n", Arrays.toString(actionsPerformed), maSolution.size());
+					// if(maSolution.size()>5)
+					// System.err.format("the second to last actions is %s and the last actions is %s\n",maSolution.get(maSolution.size()-2).actions,maSolution.get(maSolution.size()-1).actions);
 					
 					// removing goals that are not satisfied but not the goal we are looking for
 					Map<Position,Character> temp = state.satisfiedGoals();
 					state.goals.clear();
 					state.goals.putAll(temp);
 					state.goals.put(goalPos,goalType);
-					System.err.println("heuristic knows of the goals " + state.goals);
-					System.err.format("agent %s has done %d moves before search start\n",agent,moves);
+					// System.err.println("heuristic knows of the goals " + state.goals);
+					// System.err.format("agent %s has done %d moves before search start\n",agent,moves);
 					List<MAState> saSolution = Agent.searchIgnore(agentType, maSolution,
 							new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(state, agentColor,2,goalType)), goalPos, actionsPerformed.clone(),Collections.emptySet());
-					System.err.format("agent %s has solve goal %s at %s with %d moves\n",agent, goalPos, goalType, saSolution.size());
+					// System.err.format("agent %s has solve goal %s at %s with %d moves\n",agent, goalPos, goalType, saSolution.size());
 					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
 						fastestSASolution = saSolution;
 						fastestAgent = agentId;
@@ -431,10 +446,10 @@ public class Main {
 				
 				assert fastestSASolution != null : "could not find solution for goal at " + goalPos;// :)
 				
-				System.err.printf("Fastest agent was (%d) with %d moves\n", fastestAgent, fastestSASolution.size() - 1);
-				// System.err.println(fastestSASolution.get(fastestSASolution.size() - 1));
-				System.err.println(fastestSASolution.stream().map(x -> (x.actions != null ? x.actions.toString() : "(None)")).collect(Collectors.joining(" ")));
-				System.err.println();
+				// System.err.printf("Fastest agent was (%d) with %d moves\n", fastestAgent, fastestSASolution.size() - 1);
+				// // System.err.println(fastestSASolution.get(fastestSASolution.size() - 1));
+				// System.err.println(fastestSASolution.stream().map(x -> (x.actions != null ? x.actions.toString() : "(None)")).collect(Collectors.joining(" ")));
+				// System.err.println();
 				
 				// Note how much the agent has moved
 				//			actionsPerformed[fastestAgent] = fastestSASolution.size() - 1;
@@ -458,19 +473,19 @@ public class Main {
 
 	public static List<List<Command>> mergeSolutions(List<List<Command>> solution1, List<List<Command>> solution2) {
 
-		System.err.println("solution1.size()");
-		System.err.println(solution1.size());
-		System.err.println(solution2.size());
+		// System.err.println("solution1.size()");
+		// System.err.println(solution1.size());
+		// System.err.println(solution2.size());
 
 		if (solution2.size() > solution1.size()) {
 			List<List<Command>> tmp = solution1;
 			solution1 = solution2;
 			solution2 = tmp;
 		}
-		System.err.println("solution1.size() efter");
-		System.err.println(solution1);
-		System.err.println("solution2.size() efter");
-		System.err.println(solution2);
+		// System.err.println("solution1.size() efter");
+		// System.err.println(solution1);
+		// System.err.println("solution2.size() efter");
+		// System.err.println(solution2);
 
 		List<Command> initial = solution1.get(0);
 		List<List<Command>> mergedSolutionStates = new ArrayList<>(Collections.singletonList(initial)); // yolo
@@ -505,7 +520,7 @@ public class Main {
 		BufferedReader serverMessages = new BufferedReader(new InputStreamReader(System.in));
 
 		// Identify ourselves
-		System.out.println("Meme-o-tron 2000 :)");
+		System.out.println("HoldUd");
 
 		// Test that we can solve a singe-agent level
 		MAState initialState = parseLevel(serverMessages);
@@ -537,21 +552,21 @@ public class Main {
 				subSolution = maSolveIgnore(subLevel);
 				// Character agentType = subLevel.agents.values().iterator().next();
 				// String agentColor = initialState.color.get(agentType);
-				// Strategy.StrategyBestFirst strategy = new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(subLevel,agentColor,2));
+				// Strategy.StrategyBestFirst strategy = new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(subLevel,agentColor,10));
 				// subSolution = Agent.saSearch(subLevel, strategy);
 			}
 			else {
 				subSolution = maSolveIgnore(subLevel);
 			}
 			System.err.println(maSolution);
-			System.err.println("noget tekst");
+			// System.err.println("noget tekst");
 			System.err.println(subSolution);
 			assert subSolution != null;
 
 			List<List<Command>> solutionActions = subSolution.stream().map(x -> x.actions).collect(Collectors.toList());
 			maSolution = mergeSolutions(maSolution, solutionActions);
-			System.err.println("subSolution");
-			System.err.println(solutionActions);
+			// System.err.println("subSolution");
+			// System.err.println(solutionActions);
 		}
 
 		MAState state = initialState;
