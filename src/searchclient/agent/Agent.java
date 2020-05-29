@@ -135,11 +135,11 @@ public class Agent {
 
 			// int deltaG = leafState.g() - initialState.g();
 
-			if (iterations % 1_000 == 0){
+			if (iterations % 10_000 == 0){
 				System.err.println(String.join("\t", strategy.searchStatus(), strategy.describeState(leafState),
 						Memory.stringRep()));
-				// ((Strategy.StrategyBestFirst) strategy).heuristic.printH(leafState);
-				// System.err.println(leafState);
+				((Strategy.StrategyBestFirst) strategy).heuristic.printH(leafState);
+				System.err.println(leafState);
 			}
 			// if (iterations % 30_000 == 0){
 			// }

@@ -182,7 +182,7 @@ public abstract class Heuristic implements Comparator<MAState> {
                     // Ignore boxes already on goals
                     if (n.goals.containsKey(boxPos) && n.goals.get(boxPos).equals(boxType))
                     continue;
-                    
+                     
                     if (this.chars.contains(boxType) && n.color.get(agentType).equals(n.color.get(boxType))) {
                         
                         int boxDist = distToGoal.get(boxPos.getRow()).get(boxPos.getCol()).get(boxType);
@@ -199,12 +199,19 @@ public abstract class Heuristic implements Comparator<MAState> {
                 totalDistance += minAgentDist - 1;
             }
         }
-
-        // for(List goalList: this.goals.values()){
-        //     goalList.for
-        // }
-
-
+        int temp = 0;
+        for (List<Map.Entry<Position, Character>> value : this.goals.values()) {
+            temp += value.size();
+            for (Map.Entry<Position, Character> goal : value) {
+                Position goalPos = goal.getKey();
+                Character goalType = goal.getValue();
+                if(n.boxAt(goalPos) && n.boxes.get(goalPos).equals(goalType)){
+                    temp -=1;
+                }
+            }
+        }
+        if(temp==0)
+        return 0;
 
 
         return totalDistance;
@@ -310,7 +317,10 @@ public abstract class Heuristic implements Comparator<MAState> {
                     continue;
                     
                     if (this.chars.contains(boxType) && n.color.get(agentType).equals(n.color.get(boxType))) {
-                        int dist = Position.distance(agentPos, boxPos);
+                        int boxDist = distToGoal.get(boxPos.getRow()).get(boxPos.getCol()).get(boxType);
+                        int agentDist = distToGoal.get(agentPos.getRow()).get(agentPos.getCol()).get(boxType);
+                        
+                        int dist = Math.abs(boxDist-agentDist);
                         
                         if (dist < minAgentDist)
                         minAgentDist = dist;
