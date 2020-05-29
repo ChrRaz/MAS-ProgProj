@@ -229,8 +229,8 @@ public class Main {
 					int agentExtra = 0;
 					if(initialState.goals.containsKey(p)){
 						Character goalType = initialState.goals.get(p);
-						if(initialState.agents.values().contains(goalType))
-						agentExtra -= 100000;
+						if(Character.isDigit(goalType))
+						agentExtra += 100000;
 					}
 						
 
@@ -275,8 +275,8 @@ public class Main {
 						int agentExtra = 0;
 						if(initialState.goals.containsKey(p)){
 							Character goalType = initialState.goals.get(p);
-							if(initialState.agents.values().contains(goalType))
-							agentExtra -= 100000;
+							if(Character.isDigit(goalType))
+							agentExtra += 100000;
 						}
 						int dist2Agent = 0;
 						if(initialState.goals.containsKey(p2)){
