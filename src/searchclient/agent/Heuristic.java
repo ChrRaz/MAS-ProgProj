@@ -14,6 +14,7 @@ public abstract class Heuristic implements Comparator<MAState> {
     private final int numAgents;
     private final String color;
     private final Character type;
+    private final Map<Character, List<Map.Entry<Position, Character>>> goals;
 
     public Heuristic(MAState initialState, String color){   
         this(initialState, color, null);
@@ -25,7 +26,7 @@ public abstract class Heuristic implements Comparator<MAState> {
         this.color = color;
         this.numBoxes = initialState.boxes.size();
         this.numAgents = initialState.agents.size();
-
+        this.goals = initialState.goals.entrySet().stream().collect(Collectors.groupingBy(Map.Entry::getValue));
         // Initialise distance map
         this.distToGoal = new ArrayList<>(initialState.height);
         for (int i = 0; i < initialState.height; i++) {
@@ -100,10 +101,10 @@ public abstract class Heuristic implements Comparator<MAState> {
         // }
 
         // Group goals by type
-        Map<Character, List<Map.Entry<Position, Character>>> goals = n.goals.entrySet().stream().collect(Collectors.groupingBy(Map.Entry::getValue));
+        // Map<Character, List<Map.Entry<Position, Character>>> goals = n.goals.entrySet().stream().collect(Collectors.groupingBy(Map.Entry::getValue));
         Map<Character, PriorityQueue<Integer>> boxDists = new HashMap<>();
 
-        for (Character goalType : goals.keySet()) {
+        for (Character goalType : this.goals.keySet()) {
             boxDists.put(goalType, new PriorityQueue<>(Comparator.reverseOrder()));
         }
 
@@ -116,7 +117,7 @@ public abstract class Heuristic implements Comparator<MAState> {
                 PriorityQueue<Integer> dists = boxDists.get(b);
                 // System.err.println("b is " + b);
                 dists.add(this.distToGoal.get(boxPos.getRow()).get(boxPos.getCol()).getOrDefault(b, 0));
-                if (dists.size() > goals.get(b).size())
+                if (dists.size() > this.goals.get(b).size())
                     dists.poll();
             }
         }
@@ -129,7 +130,7 @@ public abstract class Heuristic implements Comparator<MAState> {
                     PriorityQueue<Integer> dists = boxDists.get(b);
                     // System.err.println("b is " + b);
                     dists.add(this.distToGoal.get(boxPos.getRow()).get(boxPos.getCol()).getOrDefault(b, 0));
-                    if (dists.size() > goals.get(b).size())
+                    if (dists.size() > this.goals.get(b).size())
                     dists.poll();
                 }
             }
@@ -183,8 +184,13 @@ public abstract class Heuristic implements Comparator<MAState> {
                     continue;
                     
                     if (this.chars.contains(boxType) && n.color.get(agentType).equals(n.color.get(boxType))) {
-                        int dist = Position.distance(agentPos, boxPos);
                         
+                        int boxDist = distToGoal.get(boxPos.getRow()).get(boxPos.getCol()).get(boxType);
+                        int agentDist = distToGoal.get(agentPos.getRow()).get(agentPos.getCol()).get(boxType);
+                        
+                        int dist = Math.abs(boxDist-agentDist);
+                        // int dist = Position.distance(agentPos, boxPos);
+
                         if (dist < minAgentDist)
                         minAgentDist = dist;
                     }
@@ -193,6 +199,14 @@ public abstract class Heuristic implements Comparator<MAState> {
                 totalDistance += minAgentDist - 1;
             }
         }
+
+        // for(List goalList: this.goals.values()){
+        //     goalList.for
+        // }
+
+
+
+
         return totalDistance;
     }
 

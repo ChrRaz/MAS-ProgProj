@@ -431,10 +431,10 @@ public class Main {
 					state.goals.clear();
 					state.goals.putAll(temp);
 					state.goals.put(goalPos,goalType);
-					// System.err.println("heuristic knows of the goals " + state.goals);
+					System.err.println("heuristic knows of the goals " + state.goals);
 					// System.err.format("agent %s has done %d moves before search start\n",agent,moves);
 					List<MAState> saSolution = Agent.searchIgnore(agentType, maSolution,
-							new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(state, agentColor,2,goalType)), goalPos, actionsPerformed.clone(),Collections.emptySet());
+							new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(state, agentColor,1,goalType)), goalPos, actionsPerformed.clone(),Collections.emptySet());
 					// System.err.format("agent %s has solve goal %s at %s with %d moves\n",agent, goalPos, goalType, saSolution.size());
 					if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
 						fastestSASolution = saSolution;

@@ -105,14 +105,14 @@ public class Agent {
 
 		int origGoalCount = alreadyPlanned.get(alreadyPlanned.size() - (1)).goalCount();
 		// System.err.format("agent %s has moved %d\n", agent, moves);
-		// System.err.format("goalPos at %s=%c.\n", goalPos,initialState.goals.get(goalPos));
+		System.err.format("goalPos at %s=%c.\n", goalPos,initialState.goals.get(goalPos));
 		// System.err.format("initialState has %s as goals and has %s as actions\n", initialState.goals,
 				// initialState.actions);
 		// System.err.format("alreadyPlanned.size() = %s and last state is \n%s with actions: %s\n", alreadyPlanned.size(),
 				// alreadyPlanned.get(alreadyPlanned.size() - 1), alreadyPlanned.get(alreadyPlanned.size() - 1).actions);
 		// System.err.format("goals: %s \n", initialState.goals);
-		// System.err.format("Search starting (%c) -> %s with %d goals using strategy %s.\n", agent, goalPos,
-				// origGoalCount, strategy.toString());
+		System.err.format("Search starting (%c) -> %s with %d goals using strategy %s.\n", agent, goalPos,
+				origGoalCount, strategy.toString());
 		MAState leafState = null;
 		long iterations = 0;
 		while (true) {
@@ -135,12 +135,12 @@ public class Agent {
 
 			// int deltaG = leafState.g() - initialState.g();
 
-			// if (iterations % 10_000 == 0){
-			// 	System.err.println(String.join("\t", strategy.searchStatus(), strategy.describeState(leafState),
-			// 			Memory.stringRep()));
-			// 	((Strategy.StrategyBestFirst) strategy).heuristic.printH(leafState);
-			// 	System.err.println(leafState);
-			// }
+			if (iterations % 1_000 == 0){
+				System.err.println(String.join("\t", strategy.searchStatus(), strategy.describeState(leafState),
+						Memory.stringRep()));
+				// ((Strategy.StrategyBestFirst) strategy).heuristic.printH(leafState);
+				// System.err.println(leafState);
+			}
 			// if (iterations % 30_000 == 0){
 			// }
 
@@ -157,7 +157,7 @@ public class Agent {
 				// checking goalcount
 				MAState endState = leafState;
 				// int tempcount = leafState.goalCount();
-				// System.err.format("endState looks like this before counting goals: \n%s\n",endState);
+				System.err.format("endState looks like this before counting goals: \n%s\n",endState);
 
 
 				boolean isApplicable = true;
@@ -174,7 +174,7 @@ public class Agent {
 					// System.err.format("endState looks like this: \n%s\n",endState);
 				}
 				// System.err.println("Counting goals");
-				// System.err.format("isApplicable=%s and endState.goalCount() = %d and origGoalCount is %d\n",isApplicable,endState.goalCount(),origGoalCount);
+				System.err.format("isApplicable=%s and endState.goalCount() = %d and origGoalCount is %d\n",isApplicable,endState.goalCount(),origGoalCount);
 				// System.err.format("satisfied goals in leafstate: %s \n satisfied goals in endState : %s \n", leafState.satisfiedGoals(),endState.satisfiedGoals());
 				if (isApplicable && endState.goalCount() < origGoalCount) {
 
@@ -433,11 +433,11 @@ public class Agent {
 				}
 				else{
 					// for(MAState state : leafState.extractPlanWithInitial()){
-						// System.err.println(strategy.describeState(state));
-						// System.err.println(state);
+					// 	System.err.println(strategy.describeState(state));
+					// 	System.err.println(state);
 					// }
-					
-					// assert false;
+					System.err.println("the goal is at pos " + goalPos);
+					assert false;
 				}
 			}
 
