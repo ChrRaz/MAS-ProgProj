@@ -7,7 +7,7 @@ import searchclient.util.Sets;
 
 public class MAState {
 	private static final Random RNG = new Random(1);
-	private static final int COSTINCREASE = 100;
+	private static final int COSTINCREASE = 10;
 
 	public int numAgents;
 	public int height, width;
@@ -56,11 +56,21 @@ public class MAState {
 		this.backUpBoxes = new TreeMap<>(parent.backUpBoxes);
 		this.backUpAgents = new TreeMap<>(parent.backUpAgents);
 		this.fakeGoals = parent.fakeGoals;
-		this.agents = new TreeMap<>(parent.agents);
+		this.agents = new TreeMap<>(parent.agents);	
 		this.color = parent.color;
 		this.numAgents = parent.numAgents;
 		this.path = new HashSet<>(parent.path);
 		this.applyActions(actions);
+		
+		// if(parent.parent!=null && !parent.parent.goals.equals(parent.goals)){
+		// 	System.err.println("mismatch in goals");
+		// 	System.err.println(this.parent.parent);
+		// 	System.err.println(this.parent);
+		// 	System.err.println(this);
+		// 	System.err.println("actions are : " + this.actions);
+
+		// 	// assert false;
+		// }
 	}
 
 	public MAState(int width, int height, String domain) {
@@ -166,13 +176,24 @@ public class MAState {
 		return g.equals(a) || g.equals(b);
 	}
 
-	public int goalCount() {
-		int res = 0;
-		for (Position goalPos : this.goals.keySet())
-			if (!this.isGoalSatisfied(goalPos))
-				res++;
-		return res;
-	}
+    public int goalCount() {
+
+        int numGoals = 0, numSatisfied = 0;
+        Map<Character, List<Map.Entry<Position, Character>>> goalsByChar = this.goals.entrySet().stream().collect(Collectors.groupingBy(Map.Entry::getValue));
+
+        for (Map.Entry<Character, List<Map.Entry<Position, Character>>> entry : goalsByChar.entrySet()) {
+            char c = entry.getKey();
+            List<Map.Entry<Position, Character>> goals = entry.getValue();
+
+            numGoals += Character.isDigit(c) ? 1 : goals.size();
+
+            for (Map.Entry<Position, Character> goal : goals)
+                if (this.isGoalSatisfied(goal.getKey()))
+                    numSatisfied++;
+        }
+
+        return numGoals - numSatisfied;
+    }
 
 	public int goalCount(String color) {
 		int res = 0;
