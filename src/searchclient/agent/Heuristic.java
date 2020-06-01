@@ -15,12 +15,14 @@ public abstract class Heuristic implements Comparator<MAState> {
     private final String color;
     private final Character type;
     private final Map<Character, List<Map.Entry<Position, Character>>> goals;
+    public MAState contructerState = null;
 
     public Heuristic(MAState initialState, String color){   
         this(initialState, color, null);
     }
 
     public Heuristic(MAState initialState, String color,Character type) {
+        this.contructerState = initialState;
         // Here's a chance to pre-process the static parts of the level.
         this.type = type;
         this.color = color;

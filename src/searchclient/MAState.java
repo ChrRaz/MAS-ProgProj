@@ -448,6 +448,47 @@ public class MAState {
 		return expandedStates2;
 	}
 
+	public static Set<Position> getPath(List<MAState> plan, char agentType){
+		Set<Position> path = new HashSet<>();
+		// System.err.println("getting path from the plan:");
+		
+		// Initial Position of agent
+		path.add(plan.get(0).getPositionOfAgent(agentType));
+		for(MAState state : plan){
+			// System.err.println(state);
+			// System.err.format("with the actions %s\n",state.actions);
+			Position agentPos = state.parent.getPositionOfAgent(agentType);
+			int agentId = Character.getNumericValue(agentType);
+
+			Command command = state.actions.get(agentId);
+			if (command instanceof Command.Move) {
+
+				Position newAgentPos = agentPos.add(((Command.Move) command).getAgentDir());
+				path.add(newAgentPos);
+
+			} else if (command instanceof Command.Push) {
+				Position newAgentPos = agentPos.add(((Command.Push) command).getAgentDir());
+				Position boxPos = newAgentPos;
+				Position newBoxPos = boxPos.add(((Command.Push) command).getBoxDir());
+
+				path.add(newAgentPos);
+				path.add(newBoxPos);
+
+			} else if (command instanceof Command.Pull) {
+				Position boxPos = agentPos.add(((Command.Pull) command).getBoxDir());
+				Position newAgentPos = agentPos.add(((Command.Pull) command).getAgentDir());
+				Position newBoxPos = agentPos;
+
+				path.add(newAgentPos);
+				path.add(newBoxPos);
+
+			} else {
+				path.add(agentPos);
+			}
+		}
+		return path;
+	}
+
 	public boolean cellIsFree(Position pos) {
 		return !this.walls.contains(pos) && !this.boxAt(pos) && !this.agentAt(pos);
 	}

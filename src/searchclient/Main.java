@@ -378,6 +378,8 @@ public class Main {
 
 		Map<Position, Character> goals = new HashMap<>(initialState.goals);
 		List<Position> goalOrder = orderGoals(initialState);
+		System.err.format("the goal ordering is %s\n",goalOrder);
+		// assert false;	
 
 		// System.err.println("Goal order is:");
 		for(Position p : orderGoals(initialState)){
@@ -389,9 +391,11 @@ public class Main {
 
 			MAState latestState = maSolution.get(maSolution.size()-1);
 			Position goalPos = null;
-			for(Position p : goalOrder){
-				if(!latestState.isGoalSatisfied(p)){
-					goalPos = p;
+			int goalIndex = 0;
+			for(int i = 0; i<goalOrder.size();i++){
+				if(!latestState.isGoalSatisfied(goalOrder.get(i))){
+					goalPos = goalOrder.get(i);
+					goalIndex = i;
 					break;
 				}
 			}
@@ -437,14 +441,17 @@ public class Main {
 				// System.err.format("the second to last actions is %s and the last actions is %s\n",maSolution.get(maSolution.size()-2).actions,maSolution.get(maSolution.size()-1).actions);
 				
 				// removing goals that are not satisfied but not the goal we are looking for
-				Map<Position,Character> temp = state.satisfiedGoals();
+				Map<Position,Character> temp = new HashMap<>();
+				for(Position tempPos : goalOrder.subList(0, goalIndex)){
+					temp.put(tempPos, state.goals.get(tempPos));
+				}
 				state.goals.clear();
 				state.goals.putAll(temp);
 				state.goals.put(goalPos,goalType);
 				System.err.println("heuristic knows of the goals " + state.goals);
 				// System.err.format("agent %s has done %d moves before search start\n",agent,moves);
 				List<MAState> saSolution = Agent.searchIgnore(agentType, maSolution,
-						new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(state, agentColor,1,goalType)), goalPos, actionsPerformed.clone(),Collections.emptySet());
+						new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(state, agentColor,2,goalType)), goalPos, actionsPerformed.clone(),Collections.emptySet());
 				// System.err.format("agent %s has solve goal %s at %s with %d moves\n",agent, goalPos, goalType, saSolution.size());
 				if (fastestSASolution == null || (saSolution != null && saSolution.size() < fastestSASolution.size())) {
 					fastestSASolution = saSolution;
