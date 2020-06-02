@@ -552,6 +552,26 @@ public class MAState {
 			}
 		}
 
+		List<Command> otherActions = new ArrayList<>(Collections.nCopies(this.numAgents, new Command.NoOp()));
+		MAState state = new MAState(this, otherActions);
+
+		for (Map.Entry<Position, Character> agent : this.agents.entrySet()) {
+			char agentType = agent.getValue();
+			int agentId = Character.getNumericValue(agentType);
+
+			Command agentAction = actions.get(agentId);
+			List<Command> testActions = new ArrayList<>(Collections.nCopies(this.numAgents, new Command.NoOp()));
+			testActions.set(agentId, agentAction);
+			MAState testState = new MAState(this, testActions);
+
+			if (!testState.isCompatible(state))
+				return false;
+
+
+			otherActions.set(agentId, agentAction);
+			state = new MAState(this, otherActions);
+		}
+
 		return true;
 	}
 
