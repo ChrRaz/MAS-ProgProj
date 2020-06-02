@@ -768,7 +768,10 @@ public class Agent {
 				if (p.within(0, 0, state.height - 1, state.width - 1) && !state.walls.contains(p)
 						&& !alreadyVisited.contains(p)) {
 
-					if (!path.contains(p) && !state.goals.containsKey(p)) {
+					// We do not want to overwrite existing goals, except when empty goals of the correct type
+					// as these goals are likely the correct goal anyway.
+					if (!path.contains(p) && (!state.goals.containsKey(p) || state.goals.get(p).equals(objectName) && !state.isGoalSatisfied(p))) {
+						System.err.printf("Moved [%c] from %s to %s\n", objectName, objectPosition, p);
 
 						if (state.boxAt(p)||state.agentAt(p)) {
 
@@ -785,13 +788,13 @@ public class Agent {
 							fakeGoals.putAll(tmpGoals);
 
 						} else if (fakeGoals.containsKey(p)) {
-							fakeGoals.remove(p);
-
 							Set<Position> newPath = new HashSet<>(path);
 							newPath.add(p);
 
 							Map<Position, Character> tempSet = new HashMap<>();
-							tempSet.put(p,state.getCell(p));
+							tempSet.put(p,fakeGoals.get(p));
+
+							fakeGoals.remove(p);
 
 							Map<Position, Character> tmpGoals = Agent.moveObjects(tempSet, state,newPath);
 							if (tmpGoals == null)
