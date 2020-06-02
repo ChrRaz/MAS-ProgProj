@@ -328,6 +328,12 @@ public class MAState {
 				return entry.getKey();
 			}
 		}
+
+		for (Map.Entry<Position, List<Character>> entry : this.backUpAgents.entrySet()) {
+			if(entry.getValue().contains(agent))
+				return entry.getKey();
+		}
+		
 		return null;
 		// throw new RuntimeException("Agent not found: " + agent);
 	}
