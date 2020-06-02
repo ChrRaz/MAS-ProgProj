@@ -382,12 +382,13 @@ public class Agent {
 									
 							List<MAState> newAlreadyPlanned = new ArrayList<>(helperPlan);
 							int[] newActionsPerformed = Agent.planToActions(newAlreadyPlanned);
-							newAlreadyPlanned.get(newActionsPerformed[agentId]).goals.put(goalPos, goalType);
+							MAState newInitialState = newAlreadyPlanned.get(newActionsPerformed[agentId]);
+							newInitialState.goals.put(goalPos, goalType);
 							Strategy newStrategy = new Strategy.StrategyBestFirst(
-									new Heuristic.AStar(initialState, initialState.color.get(agent)));
+								new Heuristic.AStar(newInitialState, newInitialState.color.get(agent)));
 							System.err.println("We helped our self so we recalculate. newAlreadyPlanned.size() = " + newAlreadyPlanned.size());
 							return Agent.searchIgnore(agent, newAlreadyPlanned, newStrategy, goalPos, newActionsPerformed,
-									oldPath);
+								oldPath);
 						}
 
 						// System.err.format("fresh looks like this before lookahead: \n%s\n",freshInitialState);
