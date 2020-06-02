@@ -102,9 +102,7 @@ public class Agent {
 		int oldMoves = moves;
 		System.err.format("goalPos is %s",goalPos);
 		MAState initialState = alreadyPlanned.get(moves);
-		Character goalType = initialState.goals.get(goalPos);
-		if(goalType==null)
-		assert false;
+		char goalType = initialState.goals.get(goalPos);
 		Position agentPos = initialState.getPositionOfAgent(agent);
 		MAState startState = initialState.clone();
 		System.err.format("The state of the heuristic is \n%s\n",((Strategy.StrategyBestFirst) strategy).heuristic.contructerState);
@@ -124,11 +122,10 @@ public class Agent {
 		// System.err.println(state);
 
 		//goal is satisfied before search starts
-		boolean isGoal = false;
-		if(Character.isDigit(goalType)){
-			if(initialState.goals.containsKey(agentPos) && initialState.goals.get(agentPos).equals(agent)){
-				isGoal=true;
-			}
+		boolean isGoal;
+		boolean isAgentGoal = Character.isDigit(goalType);
+		if (isAgentGoal) {
+			isGoal = initialState.goals.containsKey(agentPos) && initialState.goals.get(agentPos).equals(agent);
 		}
 		else{
 			isGoal = initialState.isGoalSatisfied(goalPos);
@@ -267,11 +264,8 @@ public class Agent {
 			agentPos = leafState.getPositionOfAgent(agent);
 			// System.err.format("Get a load of this: \n goalPos: %s leafState.boxes: %s
 			// leafState.goals: %s \n", goalPos,leafState.boxes,leafState.goals);
-			isGoal = false;
-			if(Character.isDigit(goalType)){
-				if(leafState.goals.containsKey(agentPos) && leafState.goals.get(agentPos).equals(agent)){
-					isGoal=true;
-				}
+			if(isAgentGoal){
+				isGoal = leafState.goals.containsKey(agentPos) && leafState.goals.get(agentPos).equals(agent);
 			}
 			else{
 				isGoal = leafState.isGoalSatisfied(goalPos);
@@ -818,6 +812,7 @@ public class Agent {
 			// if (frontier.isEmpty())
 			// 	assert false;
 		}
+		assert fakeGoals.values().stream().allMatch(Character::isLetterOrDigit);
 		System.err.format("fakegoals look like: %s\n",fakeGoals);
 		return fakeGoals;
 	}
@@ -1156,12 +1151,14 @@ public class Agent {
 				// System.err.format("tempAgentPos is now %s \n", tempAgentPos);
 
 				if (freshInitialState.boxAt(tempAgentPos)) {
-					objectPositions.put(tempAgentPos,freshInitialState.boxes.get(tempAgentPos));
+					char b = freshInitialState.boxes.get(tempAgentPos);
+					objectPositions.put(tempAgentPos, b);
 					// System.err.format("box at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 
 				if (freshInitialState.agentAt(tempAgentPos)) {
-					objectPositions.put(tempAgentPos,freshInitialState.agents.get(tempAgentPos));
+					char a = freshInitialState.agents.get(tempAgentPos);
+					objectPositions.put(tempAgentPos, a);
 					// System.err.format("agent at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 
@@ -1175,12 +1172,14 @@ public class Agent {
 				Position tempBoxPos = tempAgentPos.add(push.getBoxDir());
 
 				if (freshInitialState.boxAt(tempBoxPos)) {
-					objectPositions.put(tempBoxPos,freshInitialState.boxes.get(tempBoxPos));
+					char b = freshInitialState.boxes.get(tempBoxPos);
+					objectPositions.put(tempBoxPos, b);
 					// System.err.format("box at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 
 				if (freshInitialState.agentAt(tempBoxPos)) {
-					objectPositions.put(tempBoxPos,freshInitialState.agents.get(tempBoxPos));
+					char a = freshInitialState.agents.get(tempBoxPos);
+					objectPositions.put(tempBoxPos, a);
 					// System.err.format("agent at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 			}
@@ -1192,12 +1191,14 @@ public class Agent {
 				// Position tempBoxPos = tempAgentPos.add(pull.getBoxDir());
 
 				if (freshInitialState.boxAt(tempAgentPos)) {
-					objectPositions.put(tempAgentPos,freshInitialState.boxes.get(tempAgentPos));
+					char b = freshInitialState.boxes.get(tempAgentPos);
+					objectPositions.put(tempAgentPos, b);
 					// System.err.format("box at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 
 				if (freshInitialState.agentAt(tempAgentPos)) {
-					objectPositions.put(tempAgentPos,freshInitialState.boxes.get(tempAgentPos));
+					char a = freshInitialState.agents.get(tempAgentPos);
+					objectPositions.put(tempAgentPos, a);
 					// System.err.format("agent at %s add after %s by %d\n",tempAgentPos,action,i);
 				}
 			}
@@ -1210,6 +1211,7 @@ public class Agent {
 			// System.err.format("after %s has been applyed. ObjectPositions is now
 			// %s\n",state.actions,objectPositions);
 		}
+		assert objectPositions.values().stream().allMatch(Character::isLetterOrDigit);
 		return objectPositions;
 	}
 }
