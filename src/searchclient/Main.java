@@ -376,16 +376,8 @@ public class Main {
 		// All agents have initially performed 0 actions
 		Arrays.fill(actionsPerformed, 0);
 
-		Map<Position, Character> goals = new HashMap<>(initialState.goals);
 		List<Position> goalOrder = orderGoals(initialState);
-		System.err.format("the goal ordering is %s\n",goalOrder);
-		// assert false;	
-
-		// System.err.println("Goal order is:");
-		for(Position p : orderGoals(initialState)){
-			char goalType = initialState.goals.get(p);
-			System.err.println(p + " = " + goalType);
-		}
+		System.err.printf("Goal order is: %s\n", goalOrder.stream().map(x -> x + " = " + initialState.goals.get(x)).collect(Collectors.toList()));
 
 		while (!maSolution.get(maSolution.size() - 1).isGoalState()) {
 

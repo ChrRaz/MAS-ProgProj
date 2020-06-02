@@ -53,7 +53,7 @@ public class MAState {
 		this.goals = new HashMap<>(parent.goals);
 		this.backUpBoxes = new TreeMap<>(parent.backUpBoxes);
 		this.backUpAgents = new TreeMap<>(parent.backUpAgents);
-		this.agents = new TreeMap<>(parent.agents);	
+		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
 		this.numAgents = parent.numAgents;
 		this.applyActions(actions);
@@ -333,7 +333,7 @@ public class MAState {
 			if(entry.getValue().contains(agent))
 				return entry.getKey();
 		}
-		
+
 		return null;
 		// throw new RuntimeException("Agent not found: " + agent);
 	}
