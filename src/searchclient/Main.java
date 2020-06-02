@@ -273,8 +273,8 @@ public class Main {
 							}
 						}
 						int agentExtra = 0;
-						if(initialState.goals.containsKey(p)){
-							Character goalType = initialState.goals.get(p);
+						if(initialState.goals.containsKey(p2)){
+							Character goalType = initialState.goals.get(p2);
 							if(Character.isDigit(goalType))
 							agentExtra += 100000;
 						}
