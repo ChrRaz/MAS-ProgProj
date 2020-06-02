@@ -494,6 +494,9 @@ public class Agent {
 							// Position agentPos = helperAgent.getKey();
 							char agentType = helperAgent.getValue();
 
+							// Skip agent goals for other agents
+							if (Character.isDigit(fakeGoalType) && fakeGoalType != agentType)
+								continue;
 
 							if (!initialState.color.get(agentType).equals(initialState.color.get(fakeGoalType))) {
 								// System.err.println("helper was continued");
