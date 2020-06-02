@@ -210,8 +210,6 @@ public class Agent {
 			int[] moveActionsPerformed = Agent.planToActions(moveAlreadyPlanned);
 			moves = moveActionsPerformed[agentId];
 			startState = moveAlreadyPlanned.get(moves);
-
-			// System.err.format("initialState.path = %s",initialState.path);
 		}
 		strategy.addToFrontier(startState);
 		moves = oldMoves;
@@ -307,14 +305,10 @@ public class Agent {
 				// System.err.format("satisfied goals in leafstate: %s \n satisfied goals in endState : %s \n", leafState.satisfiedGoals(),endState.satisfiedGoals());
 				if (isApplicable && endState.goalCount() < origGoalCount) {
 
-					// System.err.println("leafState.path = " + leafState.path);
 					// System.err.println("goalPos = " + goalPos);
 					// System.err.println("leafState =\n" + leafState);
 					// System.err.println("initialState = " + initialState);
 					// System.err.format("%s found goal after %d states\n", agent, leafState.g() - initialState.g());
-					// System.err.format("LeafState.path is of size %d",leafState.path.size());
-					// if (leafState.path.size() > 0)
-					// leafState.path.remove(leafState.path.size() - 1);
 
 					List<MAState> extractedPlans = leafState.extractPlanWithInitial();
 					List<MAState> shortExtractedPlans = extractedPlans.subList(oldMoves+1, extractedPlans.size());
@@ -354,9 +348,7 @@ public class Agent {
 
 						MAState freshInitialState = new MAState(alreadyPlanned.get(0),
 								Collections.nCopies(leafState.numAgents, new Command.NoOp()));
-						// freshInitialState.path = leafState.path;
 
-						
 						for (MAState state : helperPlan) {
 							if (state.actions == null)
 							continue;
@@ -411,18 +403,8 @@ public class Agent {
 
 						// assert false;
 
-						// for (Position pos : new HashSet<>(leafState.path)) {
-						// if (freshInitialState.boxAt(pos) && !pos.equals(goalPos)
-						// || freshInitialState.agentAt(pos) &&
-						// !freshInitialState.agents.get(pos).equals(agent)) {
-						// objectPositions.add(pos);
-						// }
-						// }
-
 						// If nothing needs to move we are done
 						if (objectPositions.size() < 1) {
-							// if(leafState.path.size()<1)
-							// return helperPlan;
 							// int [] actions2 = Agent.planToActions(shortExtractedPlans);
 							// int [] actionHelperPlan = Agent.planToActions(helperPlan);
 							// System.err.println("helperPlan actions: " +
@@ -701,30 +683,6 @@ public class Agent {
 				// System.err.format("state.actions is %s\n", state.actions);
 			}
 
-			// if (iterations > 0) {
-
-			// 	// System.err.format("state.actions: %s leafState.actions: %s", state.actions,
-			// 	// leafState.actions);
-
-			// 	if (leafState.isCompatible(state)) {
-
-			// 		state.actions.set(agentId, leafState.actions.get(agentId));
-			// 		Set<Position> temp = new HashSet<>(leafState.path);
-			// 		leafState = new MAState(leafState.parent, state.actions, true);
-
-			// 		leafState.goals.putAll(initialState.goals);
-			// 		leafState.path = temp;
-			// 		// System.err.format("could apply %s to \n%s\n and got
-			// 		// \n%s\n",state.actions,leafState.parent, leafState);
-			// 	} else {
-			// 		iterations++;
-			// 		// System.err.format("could not apply %s to \n%s\n", state.actions,
-			// 		// leafState.parent);
-			// 		// System.err.println("we continued");
-			// 		continue;
-			// 	}
-			// }
-			// System.err.println("getting new states to explore");
 			for (MAState n : leafState.getExpandedStatesIgnore(agent,state)) {
 				if (!strategy.isExplored(n) && !strategy.inFrontier(n)) {
 					strategy.addToFrontier(n);
@@ -764,7 +722,6 @@ public class Agent {
 
 	public static Map<Position, Character> moveObjects(Map<Position,Character> objectPositions, MAState state, Set<Position> path) {
 		HashMap<Position, Character> fakeGoals = new HashMap<>();
-		// Set<Position> path = state.path;
 		System.err.format("The path is %s\n", path);
 
 		// System.err.format("state has boxes at %s and agents at %s\n", state.boxes, state.agents);
@@ -995,8 +952,6 @@ public class Agent {
 
 		}
 
-		// mergedPlan.get(mergedPlan.size()-1).path.addAll(newPlan.get(newPlan.size()-1).path);
-		// mergedPlan.get(mergedPlan.size()-1).path.addAll(alreadyPlanned.get(alreadyPlanned.size()-1).path);
 		return mergedPlan;
 
 	}

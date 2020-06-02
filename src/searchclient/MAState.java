@@ -27,7 +27,6 @@ public class MAState {
 	public final Set<Position> walls;
 	public final TreeMap<Position, Character> boxes;
 	public final Map<Position, Character> goals;
-	public final Map<Position, Character> fakeGoals;
 
 	public final TreeMap<Position, Character> agents;
 	public final Map<Character, String> color;
@@ -35,7 +34,6 @@ public class MAState {
 	public MAState parent;
 	public final List<Command> actions;
 
-	public Set<Position> path;
 	public TreeMap<Position,List<Character>> backUpBoxes;
 	public TreeMap<Position,List<Character>> backUpAgents;
 
@@ -55,11 +53,9 @@ public class MAState {
 		this.goals = new HashMap<>(parent.goals);
 		this.backUpBoxes = new TreeMap<>(parent.backUpBoxes);
 		this.backUpAgents = new TreeMap<>(parent.backUpAgents);
-		this.fakeGoals = parent.fakeGoals;
 		this.agents = new TreeMap<>(parent.agents);	
 		this.color = parent.color;
 		this.numAgents = parent.numAgents;
-		this.path = new HashSet<>(parent.path);
 		this.applyActions(actions);
 		
 		// if(parent.parent!=null && !parent.parent.goals.equals(parent.goals)){
@@ -86,10 +82,8 @@ public class MAState {
 		this.backUpBoxes = new TreeMap<>();
 		this.backUpAgents = new TreeMap<>();
 		this.goals = new HashMap<>();
-		this.fakeGoals = new HashMap<>();
 		this.agents = new TreeMap<>();
 		this.color = new HashMap<>();
-		this.path = new HashSet<>();
 	}
 
 	public MAState(MAState parent, List<Command> actions, Boolean skrald) {
@@ -105,11 +99,9 @@ public class MAState {
 		this.goals = new HashMap<>(parent.goals);
 		this.backUpBoxes = new TreeMap<>(parent.backUpBoxes);
 		this.backUpAgents = new TreeMap<>(parent.backUpAgents);
-		this.fakeGoals = parent.fakeGoals;
 		this.agents = new TreeMap<>(parent.agents);
 		this.color = parent.color;
 		this.numAgents = parent.numAgents;
-		this.path = new HashSet<>(parent.path);
 		this.applyActionsIgnore(actions);
 	}
 
@@ -133,11 +125,9 @@ public class MAState {
 		this.walls = state.walls;
 		this.boxes = new TreeMap<>(state.boxes);
 		this.goals = new HashMap<>(state.goals);
-		this.fakeGoals = state.fakeGoals;
 		this.agents = new TreeMap<>(state.agents);
 		this.color = state.color;
 		this.numAgents = state.numAgents;
-		this.path = new HashSet<>(state.path);
 	}
 
 	public int g() {
@@ -358,7 +348,6 @@ public class MAState {
 				otherCommands.set(Character.getNumericValue(agent), new Command.Move(agentDir));
 
 				MAState newState = new MAState(this, otherCommands, true);
-				newState.path.add(newAgentPos);
 				expandedStates.add(newState);
 			}
 		}
@@ -381,8 +370,6 @@ public class MAState {
 						otherCommands.set(Character.getNumericValue(agent), new Command.Push(agentDir, boxDir));
 
 						MAState newState = new MAState(this, otherCommands, true);
-						newState.path.add(newAgentPos);
-						newState.path.add(newBoxPos);
 						expandedStates.add(newState);
 					}
 				}
@@ -404,7 +391,6 @@ public class MAState {
 						otherCommands.set(Character.getNumericValue(agent), new Command.Pull(agentDir, boxDir));
 
 						MAState newState = new MAState(this, otherCommands, true);
-						newState.path.add(newAgentPos);
 						expandedStates.add(newState);
 					}
 				}
@@ -415,7 +401,6 @@ public class MAState {
 		ArrayList<Command> otherCommands = new ArrayList<>(Collections.nCopies(this.numAgents, new Command.NoOp()));
 
 		MAState newState = new MAState(this, otherCommands);
-		newState.path.add(agentPos);
 		expandedStates.add(newState);
 		// Kommer sikkert til at fucke massivt med DFS og Greedy lol
 
@@ -431,13 +416,8 @@ public class MAState {
 
 				List<Command> actionCopy = new ArrayList<>(nextState.actions);
 				actionCopy.set(agentID, state.actions.get(agentID));
-				Set<Position> temp = new HashSet<>(state.path);
 				state = new MAState(state.parent, actionCopy, true);
 
-				// state.goals.putAll(initialState.goals);
-				state.path = temp;
-				// System.err.format("could apply %s to \n%s\n and got
-				// \n%s\n",state.actions,leafState.parent, leafState);
 				expandedStates2.add(state);
 			}
 			else{
