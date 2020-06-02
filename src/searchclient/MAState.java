@@ -938,6 +938,12 @@ public class MAState {
 
 			}
 		}
+
+		for (Map.Entry<Position, List<Character>> entry : this.backUpAgents.entrySet()) {
+			Position agentPos = entry.getKey();
+			List<Character> agentsAtPos = entry.getValue();
+			assert agentsAtPos.isEmpty() || this.agents.containsKey(agentPos);
+		}
 	}
 
 	public MAState clone() {
