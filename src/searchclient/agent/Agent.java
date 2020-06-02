@@ -176,6 +176,11 @@ public class Agent {
 			MAState prevState = alreadyPlanned.get(moves);
 			// System.err.format("g = %d and prevstate before merge: \n%s\n",prevState.g(),prevState);
 			moveAlreadyPlanned = prevState.clone().extractPlanWithInitial();
+			if (moveToBoxSolution == null) {
+				System.err.println("Failed to find move-to-box solution");
+				return null;
+			}
+
 			for(MAState state : moveToBoxSolution.subList(moves+1, moveToBoxSolution.size())){
 				List<Command> actions = state.actions;
 				MAState nextState = new MAState(prevState,actions);
@@ -350,11 +355,16 @@ public class Agent {
 							freshInitialState = new MAState(freshInitialState, state.actions);
 							// System.err.println(freshInitialState);
 						}
-						
+
 						// System.err.format("freshInitialState looks like: \n%s\n", freshInitialState);
-						if(freshInitialState.getPositionOfAgent(agent).equals(initialState.getPositionOfAgent(agent))){
+						if (freshInitialState.getPositionOfAgent(agent).equals(initialState.getPositionOfAgent(agent))) {
+							System.err.printf("Looking for agent %c\n", agent);
 							objectPositions = Agent.lookAhead(shortExtractedPlans, freshInitialState, agent);
+							System.err.printf("Moving objects for agent %c\n", agent);
 							fakeGoals = Agent.moveObjects(objectPositions, freshInitialState, MAState.getPath(shortExtractedPlans, agent));
+							if (fakeGoals == null)
+								return null;
+
 						}
 						// else{
 						// 	System.err.format("relying on old objectPositions\n");
@@ -532,7 +542,10 @@ public class Agent {
 						// System.err.println("outside fastestSASolution is : " + fastestSASolution);
 						// System.err.println("outside fastestAgent is : " + fastestAgent);
 
-						assert fastestSASolution != null : String.format("fakeGoalPos is %s\n", fakeGoalPos);
+						if (fastestSASolution == null) {
+							System.err.println("no local solution");
+							return null;
+						}
 
 						// System.err.format("Replacing %s with ", Arrays.toString(actionsPerformed));
 						actionsPerformed = Agent.planToActions(fastestSASolution);
@@ -752,7 +765,9 @@ public class Agent {
 			// System.err.println(path);
 
 			while (true) {
-				assert !frontier.isEmpty() : "frontier empty";
+				if (frontier.isEmpty())
+					return null;
+
 				Position p = frontier.pop();
 				// System.err.format("In move objects found p = %s\n",p);
 
@@ -772,6 +787,8 @@ public class Agent {
 							tempSet.put(p,state.getCell(p));
 
 							Map<Position, Character> tmpGoals = Agent.moveObjects(tempSet, state,newPath);
+							if (tmpGoals == null)
+								return null;
 
 							fakeGoals.putAll(tmpGoals);
 
@@ -785,6 +802,8 @@ public class Agent {
 							tempSet.put(p,state.getCell(p));
 
 							Map<Position, Character> tmpGoals = Agent.moveObjects(tempSet, state,newPath);
+							if (tmpGoals == null)
+								return null;
 
 							fakeGoals.putAll(tmpGoals);
 						}
