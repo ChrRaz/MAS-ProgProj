@@ -359,7 +359,8 @@ public class Agent {
 						}
 
 						// System.err.format("freshInitialState looks like: \n%s\n", freshInitialState);
-						if (freshInitialState.getPositionOfAgent(agent).equals(initialState.getPositionOfAgent(agent))) {
+						// if (freshInitialState.getPositionOfAgent(agent).equals(initialState.getPositionOfAgent(agent))) {
+						if (Agent.planToActions(helperPlan)[agentId] == moves) {
 							System.err.printf("Looking for agent %c\n", agent);
 							objectPositions = Agent.lookAhead(shortExtractedPlans, freshInitialState, agent);
 							System.err.printf("Moving objects for agent %c\n", agent);
@@ -383,7 +384,8 @@ public class Agent {
 						System.err.format("missingFakeGoals is %d", missingFakeGoals);
 
 
-						if (!freshInitialState.getPositionOfAgent(agent).equals(initialState.getPositionOfAgent(agent)) && missingFakeGoals == 0) {
+						if (Agent.planToActions(helperPlan)[agentId] != moves && missingFakeGoals == 0) {
+						// if (!(freshInitialState.getPositionOfAgent(agent).equals(initialState.getPositionOfAgent(agent))) && missingFakeGoals == 0) {
 							// System.err.println("Replaning because we helped our selfs");
 							// System.err.format("fresh pos %s pre pos %s \n", freshInitialState.getPositionOfAgent(agent),
 							// initialState.getPositionOfAgent(agent));
