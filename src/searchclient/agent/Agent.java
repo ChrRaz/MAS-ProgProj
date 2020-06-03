@@ -7,6 +7,7 @@ import searchclient.Position;
 import searchclient.util.Memory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Agent {
 
