@@ -16,8 +16,8 @@ public class Agent {
 
 		int origGoalCount = alreadyPlanned.get(alreadyPlanned.size() - 1).goalCount();
 
-		// System.err.format("Search starting (%c) with %d goals using strategy %s.\n", agent, origGoalCount,
-				// strategy.toString());
+		System.err.format("Search starting (%c) with %d goals using strategy %s.\n", agent, origGoalCount,
+				strategy.toString());
 
 		long iterations = 0;
 		while (true) {
@@ -32,10 +32,10 @@ public class Agent {
 
 			int deltaG = leafState.g() - initialState.g();
 
-			if (iterations % 10_000 == 0)
+			// if (iterations % 10_000 == 0)
 				// System.err.println(String.join("\t", strategy.searchStatus(), strategy.describeState(leafState),
 						// Memory.stringRep()));
-
+			// System.err.format("agentAchivedGoal: %s",!leafState.isInitialState() && leafState.agentAchievedGoal(agent));
 			if (!leafState.isInitialState() && leafState.agentAchievedGoal(agent)) {
 				MAState endState = leafState;
 
@@ -53,7 +53,7 @@ public class Agent {
 					ArrayList<MAState> plan = leafState.extractPlanWithInitial();
 
 					// System.err.println(String.join("\t", strategy.searchStatus(), strategy.describeState(leafState),
-							// Memory.stringRep()));
+					// 		Memory.stringRep()));
 					// System.err.printf("Found solution of length %d\n", plan.size() - 1);
 
 					return plan;
