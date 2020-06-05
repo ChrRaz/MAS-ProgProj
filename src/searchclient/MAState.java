@@ -57,16 +57,6 @@ public class MAState {
 		this.color = parent.color;
 		this.numAgents = parent.numAgents;
 		this.applyActions(actions);
-		
-		// if(parent.parent!=null && !parent.parent.goals.equals(parent.goals)){
-		// 	System.err.println("mismatch in goals");
-		// 	System.err.println(this.parent.parent);
-		// 	System.err.println(this.parent);
-		// 	System.err.println(this);
-		// 	System.err.println("actions are : " + this.actions);
-
-		// 	// assert false;
-		// }
 	}
 
 	public MAState(int width, int height, String domain) {
@@ -246,9 +236,6 @@ public class MAState {
 
 				MAState newState = new MAState(this, otherCommands);
 
-				// newState.agents.remove(agentPos);
-				// newState.agents.put(newAgentPos, agent);
-
 				expandedStates.add(newState);
 			}
 		}
@@ -271,12 +258,6 @@ public class MAState {
 
 						MAState newState = new MAState(this, otherCommands);
 
-						// newState.agents.remove(agentPos);
-						// newState.agents.put(newAgentPos, agent);
-
-						// Character box = newState.boxes.remove(boxPos);
-						// newState.boxes.put(newBoxPos, box);
-
 						expandedStates.add(newState);
 					}
 				}
@@ -298,12 +279,6 @@ public class MAState {
 
 						MAState newState = new MAState(this, otherCommands);
 
-						// newState.agents.remove(agentPos);
-						// newState.agents.put(newAgentPos, agent);
-
-						// Character box = newState.boxes.remove(boxPos);
-						// newState.boxes.put(agentPos, box);
-
 						expandedStates.add(newState);
 					}
 				}
@@ -316,7 +291,6 @@ public class MAState {
 
 		MAState newState = new MAState(this, otherCommands);
 		expandedStates.add(newState);
-		// Kommer sikkert til at fucke massivt med DFS og Greedy lol
 
 		Collections.shuffle(expandedStates, RNG);
 		return expandedStates;
@@ -335,7 +309,6 @@ public class MAState {
 		}
 
 		return null;
-		// throw new RuntimeException("Agent not found: " + agent);
 	}
 
 	public ArrayList<MAState> getExpandedStatesIgnore(char agent, MAState nextState) {
@@ -408,13 +381,10 @@ public class MAState {
 
 		MAState newState = new MAState(this, otherCommands);
 		expandedStates.add(newState);
-		// Kommer sikkert til at fucke massivt med DFS og Greedy lol
 
 		// Applying the actions of the next state.
 		ArrayList<MAState> expandedStates2 = new ArrayList<>();
 		int agentID = Character.getNumericValue(agent);
-
-		// System.err.println("nextState.actions = " + nextState.actions);
 
 		for (MAState state : expandedStates) {
 
@@ -426,9 +396,6 @@ public class MAState {
 
 				expandedStates2.add(state);
 			}
-			else{
-				// System.err.format("State was not compatible with nextState\n");
-			}
 		}
 		Collections.shuffle(expandedStates2, RNG);
 		return expandedStates2;
@@ -436,13 +403,10 @@ public class MAState {
 
 	public static Set<Position> getPath(List<MAState> plan, char agentType){
 		Set<Position> path = new HashSet<>();
-		// System.err.println("getting path from the plan:");
 		
 		// Initial Position of agent
 		path.add(plan.get(0).getPositionOfAgent(agentType));
 		for(MAState state : plan){
-			// System.err.println(state);
-			// System.err.format("with the actions %s\n",state.actions);
 			Position agentPos = state.parent.getPositionOfAgent(agentType);
 			int agentId = Character.getNumericValue(agentType);
 
@@ -576,25 +540,10 @@ public class MAState {
 	}
 
 	public boolean isCompatible(MAState nextState) {
-
-		// if(this.extractPlan().size()>10 && nextState.extractPlan().size()>10){
-		// System.err.println("extractPlan from this");
-		// for( MAState state : this.extractPlan().subList(this.extractPlan().size()-5,
-		// this.extractPlan().size()))
-		// System.err.format("%s actions: %s\n",state,state.actions);
-
-		// System.err.println("extractPlan from nextState");
-		// for( MAState state :
-		// nextState.extractPlan().subList(nextState.extractPlan().size()-5,
-		// nextState.extractPlan().size()))
-		// System.err.format("%s actions: %s\n",state,state.actions);
-		// }
-		// System.err.format("Checking for missing agents")
 		for (int i = 0; i < this.numAgents; i++) {
 			Command com = this.actions.get(i);
 			char c = Integer.toString(i).charAt(0);
 			if (!(com instanceof Command.NoOp) && this.agents.get(this.getPositionOfAgent(c)) == null){
-				// System.err.format("agent %d was missing in \n%s\n",i,this);
 				return false;
 			}
 
@@ -602,54 +551,28 @@ public class MAState {
 			if (!(com2 instanceof Command.NoOp)) {
 				if (nextState.getPositionOfAgent(c) == null
 						|| nextState.agents.get(nextState.getPositionOfAgent(c)) == null){
-							// System.err.format("agent %d was missing in \n%s\n",i,nextState);
 							return false;
 						}
 			}
 		}
-		// if(!this.parent.isApplicable(this.actions)){
-		// System.err.format("%s could not be applied to
-		// \n%s\n",this.actions,this.parent);
-		// assert false;
-		// }
-		// if(!nextState.parent.isApplicable(nextState.actions)){
-		// assert false;
-		// }
-
-		// System.err.format("this has %s actions and is \n%s\n nextState has %s actions
-		// and is \n%s\n",this.actions,this,nextState.actions,nextState);
 
 		Set<Position> thisNew = this.getNewPositions();
-		// System.err.println("getting thatNew");
 		Set<Position> thatNew = nextState.getNewPositions();
-		// System.err.println("got thatNew");
 		Set<Position> thisOld = this.getOldPositions();
-		// System.err.println("getting thatOld");
 		Set<Position> thatOld = nextState.getOldPositions();
-		// System.err.println("got thatOld");
-		// System.err.format("this.actions %s nextState.actions %s\n",this.actions,nextState.actions);
-		// System.err.format("thisNew: %s thatNew: %s thisOld: %s thatOld: %s\n",
-		// thisNew, thatNew,thisOld,thatOld);
 
 		if (!Sets.intersection(thisNew, thatNew).isEmpty()) {
-			// System.err.println("thisNew and thatNew was not compatible");
-			// System.err.format("thisNew: %s thatNew: %s this:\n%s\n that:
-			// \n%s\n",thisNew,thatNew,this,nextState);
 			return false;
 		}
 		if (!Sets.intersection(thisNew, thatOld).isEmpty()) {
-			// System.err.println("thisNew and thatOld was not compatible");
 			return false;
 		}
 		if (!Sets.intersection(thisOld, thatNew).isEmpty()) {
-			// System.err.println("thisOld and thatNew was not compatible");
 			return false;
 		}
 		if (!Sets.intersection(thisOld, thatOld).isEmpty()) {
-			// System.err.println("thisOld and thatOld was not compatible");
 			return false;
 		}
-		// System.err.format("isCompatible was true\n");
 		return true;
 	}
 
@@ -668,7 +591,6 @@ public class MAState {
 	public Set<Position> getOldPositions() {
 		MAState parent = this.parent;
 		Set<Position> oldPositions = new HashSet<>();
-		// System.err.format("parent agents is %s\n",parent.agents.entrySet());
 
 		for (Map.Entry<Position, Character> agent : parent.agents.entrySet()) {
 			Position agentPos = agent.getKey();
@@ -678,7 +600,6 @@ public class MAState {
 			Command command = this.actions.get(agentId);
 			if (command instanceof Command.Move) {
 				oldPositions.add(agentPos);
-				// System.err.format("move oldPosition is %s\n",oldPositions);
 
 			} else if (command instanceof Command.Push) {
 
@@ -686,15 +607,12 @@ public class MAState {
 
 				oldPositions.add(agentPos);
 				oldPositions.add(newAgentPos);
-				// System.err.format("push oldPosition is %s\n",oldPositions);
 			} else if (command instanceof Command.Pull) {
 
 				Position boxPos = agentPos.add(((Command.Pull) command).getBoxDir());
 				oldPositions.add(boxPos);
 				oldPositions.add(agentPos);
-				// System.err.format("pull oldPosition is %s\n",oldPositions);
 			} else {
-				// System.err.format("%s was not one of the other commands\n",command);
 			}
 		}
 
@@ -824,8 +742,6 @@ public class MAState {
 					List<Character> backUp = this.backUpAgents.get(agentPos);
 					Character backUpAgent = backUp.remove(0);
 					this.agents.put(agentPos,backUpAgent);
-					// backUp.add(this.agents.get(newAgentPos));
-					// this.cost += COSTINCREASE;
 				}
 
 			} else if (command instanceof Command.Push) {
@@ -836,10 +752,6 @@ public class MAState {
 				assert this.boxAt(newAgentPos, agentColor) : String.format("Cannot apply %s to\n%s", actions,
 						this.parent);
 				assert this.cellIsFreeIgnore(newBoxPos) : String.format("Cannot apply %s to\n%s", actions, this.parent);
-
-				// if (!this.cellIsFree(newBoxPos)) {
-				// 	this.cost += COSTINCREASE;
-				// }
 
 				// Backing up agent at newAgentPos
 				if (this.agentAt(newAgentPos)) {
@@ -852,8 +764,6 @@ public class MAState {
 				if (this.boxAt(newBoxPos)) {
 					this.backUpBoxes.putIfAbsent(newBoxPos, new ArrayList<>());
 					List<Character> backUp = this.backUpBoxes.get(newBoxPos);
-					if(backUp.size()>1)
-						// System.err.println("backup is " + backUp + " in \n" + this);
 					backUp.add(this.boxes.get(newBoxPos));
 				}
 				if(!this.cellIsFree(newBoxPos))
@@ -870,8 +780,6 @@ public class MAState {
 					List<Character> backUp = this.backUpAgents.get(agentPos);
 					Character backUpAgent = backUp.remove(0);
 					this.agents.put(agentPos,backUpAgent);
-					// backUp.add(this.agents.get(newAgentPos));
-					// this.cost += COSTINCREASE;
 				}
 
 				// Adding backup box at newAgentPos
@@ -879,8 +787,6 @@ public class MAState {
 					List<Character> backUp = this.backUpAgents.get(newAgentPos);
 					Character backUpAgent = backUp.remove(0);
 					this.boxes.put(newAgentPos,backUpAgent);
-					// backUp.add(this.agents.get(newAgentPos));
-					// this.cost += COSTINCREASE;
 				}
 
 			} else if (command instanceof Command.Pull) {
@@ -901,7 +807,6 @@ public class MAState {
 					this.backUpAgents.putIfAbsent(newAgentPos, new ArrayList<>());
 					List<Character> backUp = this.backUpAgents.get(newAgentPos);
 					backUp.add(this.agents.get(newAgentPos));
-					// this.cost += COSTINCREASE;
 				}
 
 				// Backing up box at agentPos
@@ -909,7 +814,6 @@ public class MAState {
 					this.backUpBoxes.putIfAbsent(agentPos, new ArrayList<>());
 					List<Character> backUp = this.backUpBoxes.get(agentPos);
 					backUp.add(this.boxes.get(agentPos));
-					// this.cost += COSTINCREASE;
 				}
 
 				this.agents.remove(agentPos);
@@ -923,8 +827,6 @@ public class MAState {
 					List<Character> backUp = this.backUpAgents.get(agentPos);
 					Character backUpAgent = backUp.remove(0);
 					this.agents.put(agentPos,backUpAgent);
-					// backUp.add(this.agents.get(newAgentPos));
-					// this.cost += COSTINCREASE;
 				}
 
 				// Adding backup box at boxPos
@@ -932,10 +834,7 @@ public class MAState {
 					List<Character> backUp = this.backUpAgents.get(boxPos);
 					Character backUpAgent = backUp.remove(0);
 					this.boxes.put(boxPos,backUpAgent);
-					// backUp.add(this.agents.get(newAgentPos));
-					// this.cost += COSTINCREASE;
 				}
-
 			}
 		}
 
@@ -1067,5 +966,4 @@ public class MAState {
 		}
 		return s.toString();
 	}
-
 }
