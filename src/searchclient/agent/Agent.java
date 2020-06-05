@@ -34,9 +34,9 @@ public class Agent {
 
 			int deltaG = leafState.g() - initialState.g();
 
-			if (iterations % 10_000 == 0)
-				System.err.println(String.join("\t", strategy.searchStatus(), strategy.describeState(leafState),
-						Memory.stringRep()));
+			// if (iterations % 10_000 == 0)
+			// 	System.err.println(String.join("\t", strategy.searchStatus(), strategy.describeState(leafState),
+			// 			Memory.stringRep()));
 
 			if (!leafState.isInitialState() && leafState.agentAchievedGoal(agent)) {
 				MAState endState = leafState;
@@ -101,12 +101,12 @@ public class Agent {
 		int agentId = Character.getNumericValue(agent);
 		int moves = actionsPerformed[agentId];
 		int oldMoves = moves;
-		System.err.format("goalPos is %s",goalPos);
+		// System.err.format("goalPos is %s",goalPos);
 		MAState initialState = alreadyPlanned.get(moves);
 		char goalType = initialState.goals.get(goalPos);
 		Position agentPos = initialState.getPositionOfAgent(agent);
 		MAState startState = initialState.clone();
-		System.err.format("The state of the heuristic is \n%s\n",((Strategy.StrategyBestFirst) strategy).heuristic.contructerState);
+		// System.err.format("The state of the heuristic is \n%s\n",((Strategy.StrategyBestFirst) strategy).heuristic.contructerState);
 		// Map<Position,Character> tempgoals = alreadyPlanned.get(0).goals;
 		// for(MAState state : alreadyPlanned){
 		// 	if(!state.goals.equals(tempgoals)){
@@ -133,7 +133,7 @@ public class Agent {
 		}
 
 		if(isGoal){
-			System.err.println("Goal was allready satisfied returning")	;
+			// System.err.println("Goal was allready satisfied returning")	;
 			return alreadyPlanned;
 		}
 
@@ -169,16 +169,16 @@ public class Agent {
 			String agentColor = initialState.color.get(agent);
 
 			//Move agent to the best box.
-			System.err.println("finding best box calling");
+			// System.err.println("finding best box calling");
 			List<MAState> moveToBoxSolution = Agent.searchIgnore(agent, moveAlreadyPlanned,
-								new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(initialState,agentColor,1,agent)), anyGoal, actionsPerformed.clone(),Collections.emptySet());
+								new Strategy.StrategyBestFirst(new Heuristic.WeightedAStar(initialState,agentColor,2,agent)), anyGoal, actionsPerformed.clone(),Collections.emptySet());
 			
 			//writing the moves into alreadyPlanned that gets the agent to the box
 			MAState prevState = alreadyPlanned.get(moves);
 			// System.err.format("g = %d and prevstate before merge: \n%s\n",prevState.g(),prevState);
 			moveAlreadyPlanned = prevState.clone().extractPlanWithInitial();
 			if (moveToBoxSolution == null) {
-				System.err.println("Failed to find move-to-box solution");
+				// System.err.println("Failed to find move-to-box solution");
 				return null;
 			}
 
@@ -216,16 +216,16 @@ public class Agent {
 		}
 		strategy.addToFrontier(startState);
 		moves = oldMoves;
-		System.err.format("last state of alreadyPlanned lookslike %s",alreadyPlanned.get(alreadyPlanned.size() - (1)));
+		// System.err.format("last state of alreadyPlanned lookslike %s",alreadyPlanned.get(alreadyPlanned.size() - (1)));
 		// System.err.format("agent %s has moved %d\n", agent, moves);
-		System.err.format("goalPos at %s=%c.\n", goalPos,initialState.goals.get(goalPos));
+		// System.err.format("goalPos at %s=%c.\n", goalPos,initialState.goals.get(goalPos));
 		// System.err.format("initialState has %s as goals and has %s as actions\n", initialState.goals,
 				// initialState.actions);
 		// System.err.format("alreadyPlanned.size() = %s and last state is \n%s with actions: %s\n", alreadyPlanned.size(),
 				// alreadyPlanned.get(alreadyPlanned.size() - 1), alreadyPlanned.get(alreadyPlanned.size() - 1).actions);
 		// System.err.format("goals: %s \n", initialState.goals);
-		System.err.format("Search starting (%c) -> %s with %d goals using strategy %s.\n", agent, goalPos,
-				origGoalCount, strategy.toString());
+		// System.err.format("Search starting (%c) -> %s with %d goals using strategy %s.\n", agent, goalPos,
+		// 		origGoalCount, strategy.toString());
 		MAState leafState = null;
 		long iterations = 0;
 
@@ -235,14 +235,14 @@ public class Agent {
 		while (true) {
 			// System.err.format("frontier is of size: %s\n",strategy.countFrontier());
 			if (strategy.frontierIsEmpty()) {
-				System.err.println(String.join("\t", strategy.searchStatus(), Memory.stringRep()));
-				System.err.format("Agent %s could not solve goal %s \n", agent, goalPos);
-				System.err.format("Search failed after %d iterations :(, last state was: %s\n with a g value of %d\n ",
-						iterations, leafState, leafState.g());
-				System.err.println("explored consists of:");
-				for (MAState state : strategy.explored) {
-					System.err.println(state);
-				}
+				// System.err.println(String.join("\t", strategy.searchStatus(), Memory.stringRep()));
+				// System.err.format("Agent %s could not solve goal %s \n", agent, goalPos);
+				// System.err.format("Search failed after %d iterations :(, last state was: %s\n with a g value of %d\n ",
+				// 		iterations, leafState, leafState.g());
+				// System.err.println("explored consists of:");
+				// for (MAState state : strategy.explored) {
+				// 	System.err.println(state);
+				// }
 
 				return null;
 			}
@@ -252,16 +252,16 @@ public class Agent {
 
 			// int deltaG = leafState.g() - initialState.g();
 
-			if (iterations % 5_000 == 0) {
-				System.err.println(String.join(" ",
-					strategy.searchStatus(),
-					strategy.describeState(leafState),
-					Memory.stringRep()));
-				// ((Strategy.StrategyBestFirst) strategy).heuristic.printH(leafState);
-				System.err.println(leafState);
+			// if (iterations % 5_000 == 0) {
+			// 	System.err.println(String.join(" ",
+			// 		strategy.searchStatus(),
+			// 		strategy.describeState(leafState),
+			// 		Memory.stringRep()));
+			// 	// ((Strategy.StrategyBestFirst) strategy).heuristic.printH(leafState);
+			// 	System.err.println(leafState);
 
-				System.err.format("The heuritic knows the goals %s\n", ((Strategy.StrategyBestFirst) strategy).heuristic.contructerState.goals);
-			}
+			// 	System.err.format("The heuritic knows the goals %s\n", ((Strategy.StrategyBestFirst) strategy).heuristic.contructerState.goals);
+			// }
 			// if (iterations % 30_000 == 0){
 			// }
 
@@ -362,9 +362,9 @@ public class Agent {
 						// System.err.format("freshInitialState looks like: \n%s\n", freshInitialState);
 						// if (freshInitialState.getPositionOfAgent(agent).equals(initialState.getPositionOfAgent(agent))) {
 						if (Agent.planToActions(helperPlan)[agentId] == moves) {
-							System.err.printf("Looking for agent %c\n", agent);
+							// System.err.printf("Looking for agent %c\n", agent);
 							objectPositions = Agent.lookAhead(shortExtractedPlans, freshInitialState, agent);
-							System.err.printf("Moving objects for agent %c\n", agent);
+							// System.err.printf("Moving objects for agent %c\n", agent);
 							fakeGoals = Agent.moveObjects(objectPositions, freshInitialState, MAState.getPath(shortExtractedPlans, agent));
 							if (fakeGoals == null)
 								return null;
@@ -382,7 +382,7 @@ public class Agent {
 								missingFakeGoals++;
 							}
 						}
-						System.err.format("missingFakeGoals is %d", missingFakeGoals);
+						// System.err.format("missingFakeGoals is %d", missingFakeGoals);
 
 
 						if (Agent.planToActions(helperPlan)[agentId] != moves && missingFakeGoals == 0) {
@@ -401,7 +401,7 @@ public class Agent {
 							newInitialState.goals.put(goalPos, goalType);
 							Strategy newStrategy = new Strategy.StrategyBestFirst(
 								new Heuristic.AStar(newInitialState, newInitialState.color.get(agent)));
-							System.err.println("We helped our self so we recalculate. newAlreadyPlanned.size() = " + newAlreadyPlanned.size());
+							// System.err.println("We helped our self so we recalculate. newAlreadyPlanned.size() = " + newAlreadyPlanned.size());
 							return Agent.searchIgnore(agent, newAlreadyPlanned, newStrategy, goalPos, newActionsPerformed,
 								oldPath);
 						}
@@ -437,10 +437,10 @@ public class Agent {
 							// 	System.err.println(strategy.describeState(state));
 							// 	System.err.println(state);
 							// }
-							System.err.println("helperPlan.size() = " + helperPlan.size());
-							System.err.println("shortextractedPlans.size() = " + shortExtractedPlans.size());
-							System.err.println("Plan.size() = " + plan.size());
-							System.err.println("no objects returning");
+							// System.err.println("helperPlan.size() = " + helperPlan.size());
+							// System.err.println("shortextractedPlans.size() = " + shortExtractedPlans.size());
+							// System.err.println("Plan.size() = " + plan.size());
+							// System.err.println("no objects returning");
 							// if(plan.size()>15)
 							// assert false;
 							return plan;
@@ -462,7 +462,7 @@ public class Agent {
 						orderState.goals.putAll(fakeGoals);
 
 						List<Position> goalOrder = Main.orderGoals(orderState);
-						System.err.printf("Goal order is: %s\n", goalOrder.stream().map(x -> x + " = " + orderState.goals.get(x)).collect(Collectors.toList()));
+						// System.err.printf("Goal order is: %s\n", goalOrder.stream().map(x -> x + " = " + orderState.goals.get(x)).collect(Collectors.toList()));
 
 						Position fakeGoalPos = null;
 						int nextGoalIndex = 0;
@@ -515,7 +515,7 @@ public class Agent {
 							state.goals.clear();
 							state.goals.putAll(prevGoals);
 							state.goals.put(fakeGoalPos, fakeGoalType);
-							System.err.format("fake: Heuristic knows the goals: %s\n", state.goals);
+							// System.err.format("fake: Heuristic knows the goals: %s\n", state.goals);
 							// assert false;
 							// ArrayList<MAState> saSolution = Agent.search(agentType,
 							// helperPlan.subList(helperMoves, helperPlan.size()),
@@ -548,7 +548,7 @@ public class Agent {
 						// System.err.println("outside fastestAgent is : " + fastestAgent);
 
 						if (fastestSASolution == null) {
-							System.err.println("no local solution");
+							// System.err.println("no local solution");
 							return null;
 						}
 
@@ -633,7 +633,7 @@ public class Agent {
 					// 	System.err.println(strategy.describeState(state));
 					// 	System.err.println(state);
 					// }
-					System.err.println("lul never happens but returning");
+					// System.err.println("lul never happens but returning");
 					return extractedPlans;
 				}
 			}
@@ -727,7 +727,7 @@ public class Agent {
 
 	public static Map<Position, Character> moveObjects(Map<Position,Character> objectPositions, MAState state, Set<Position> path) {
 		HashMap<Position, Character> fakeGoals = new HashMap<>();
-		System.err.format("The path is %s\n", path);
+		// System.err.format("The path is %s\n", path);
 
 		// System.err.format("state has boxes at %s and agents at %s\n", state.boxes, state.agents);
 
@@ -774,7 +774,7 @@ public class Agent {
 					// We do not want to overwrite existing goals, except when empty goals of the correct type
 					// as these goals are likely the correct goal anyway.
 					if (!path.contains(p) && (!state.goals.containsKey(p) || state.goals.get(p).equals(objectName) && !state.isGoalSatisfied(p))) {
-						System.err.printf("Moved [%c] from %s to %s\n", objectName, objectPosition, p);
+						// System.err.printf("Moved [%c] from %s to %s\n", objectName, objectPosition, p);
 
 						if (state.boxAt(p)||state.agentAt(p)) {
 
@@ -831,7 +831,7 @@ public class Agent {
 			// 	assert false;
 		}
 		assert fakeGoals.values().stream().allMatch(Character::isLetterOrDigit);
-		System.err.format("fakegoals look like: %s\n",fakeGoals);
+		// System.err.format("fakegoals look like: %s\n",fakeGoals);
 		return fakeGoals;
 	}
 
@@ -851,9 +851,9 @@ public class Agent {
 
 			MAState leafState = strategy.getAndRemoveLeaf();
 
-			if (iterations % 10000 == 0)
-				System.err.println(String.join("\t", strategy.searchStatus(), strategy.describeState(leafState),
-						Memory.stringRep()));
+			// if (iterations % 10000 == 0)
+			// 	System.err.println(String.join("\t", strategy.searchStatus(), strategy.describeState(leafState),
+						// Memory.stringRep()));
 
 			if (leafState.isGoalState()) {
 				// System.err.println(String.join("\t", strategy.searchStatus(), strategy.describeState(leafState),

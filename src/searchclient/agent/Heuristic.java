@@ -279,9 +279,9 @@ public abstract class Heuristic implements Comparator<MAState> {
         }
         for(Map.Entry<Character, PriorityQueue<Integer>> e :boxDists.entrySet()){
             Character type = e.getKey();
-            System.err.println("the goal " + type + " has the dists:");
-            for(int d : e.getValue())
-                System.err.println(d);
+            // System.err.println("the goal " + type + " has the dists:");
+            // for(int d : e.getValue())
+            //     System.err.println(d);
         }
 
         for (PriorityQueue<Integer> dists : boxDists.values()) {
@@ -328,11 +328,11 @@ public abstract class Heuristic implements Comparator<MAState> {
                         minAgentDist = dist;
                     }
                 }
-                System.err.println("agent " + agent + " was " + minAgentDist + " from a box of type " + type);
+                // System.err.println("agent " + agent + " was " + minAgentDist + " from a box of type " + type);
                 // if (minAgentDist != Integer.MAX_VALUE)
             }
         }
-        System.err.println("type = " + type);
+        // System.err.println("type = " + type);
     }
 
 
